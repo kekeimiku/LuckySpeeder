@@ -43,3 +43,13 @@ Google Search: [How to inject dylib into ipa](https://www.google.com/search?clie
 [Brotato](https://apps.apple.com/us/app/brotato/id6445884925)
 
 And more...
+
+## FAQ
+
+### Why does changing the speed have no effect in some games?
+
+1. If possible, try turning off VSync in your game.
+
+2. The game’s anti-cheat system might be preventing this.
+
+3. The game uses a special timer, which LuckySpeeder currently cannot handle.
