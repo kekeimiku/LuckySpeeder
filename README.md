@@ -24,6 +24,8 @@ Inject [LuckySpeeder.dylib](https://github.com/kekeimiku/LuckySpeeder/releases) 
 
 Google Search: [How to inject dylib into ipa](https://www.google.com/search?client=safari&rls=en&q=How+to+inject+dylib+into+ipa)
 
+PS: You can work without injecting tools like CydiaSubstrate or Substitute.
+
 ## TODO
 
 - [x] Support PlayCover IOS App
@@ -41,6 +43,10 @@ Google Search: [How to inject dylib into ipa](https://www.google.com/search?clie
 [Hearthstone](https://apps.apple.com/us/app/hearthstone/id625257520)
 
 [Brotato](https://apps.apple.com/us/app/brotato/id6445884925)
+
+[Subway Surfers](https://apps.apple.com/us/app/subway-surfers/id512939461)
+
+[Laya's Horizon](https://apps.apple.com/us/app/layas-horizon/id1615116545)
 
 And more...
 
