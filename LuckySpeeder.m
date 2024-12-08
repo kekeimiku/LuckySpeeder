@@ -34,17 +34,13 @@ SOFTWARE.
 
 // hook unity timeScale
 
+static float timeScale_speed = 1.0;
+
 static void (*real_timeScale)(float) = NULL;
 
-void set_timeScale(float a1) {
+void my_timeScale() {
   if (real_timeScale) {
-    real_timeScale(a1);
-  }
-}
-
-void restore_timeScale() {
-  if (real_timeScale) {
-    set_timeScale(1.0);
+    real_timeScale(timeScale_speed);
   }
 }
 
@@ -157,12 +153,19 @@ int hook_timeScale() {
 
   if (real_timeScale) {
     *(uintptr_t *)(function_data_offset + code_section_address) =
-        (uintptr_t)set_timeScale;
+        (uintptr_t)my_timeScale;
     return 0;
   }
 
   return -1;
 }
+
+void set_timeScale(float a1) {
+  timeScale_speed = a1;
+  my_timeScale();
+}
+
+void restore_timeScale() { set_timeScale(1.0); }
 
 // hook system gettimeofday and clock_gettime
 
@@ -211,18 +214,15 @@ int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
 }
 
 int hook_gettimeofday() {
+  if (real_gettimeofday) {
+    return 0;
+  }
   return rebind_symbols((struct rebinding[1]){{"gettimeofday", my_gettimeofday,
                                                (void *)&real_gettimeofday}},
                         1);
 }
 
-void restore_gettimeofday() {
-  if (real_gettimeofday) {
-    rebind_symbols(
-        (struct rebinding[1]){{"gettimeofday", real_gettimeofday, NULL}}, 1);
-    real_gettimeofday = NULL;
-  }
-}
+void restore_gettimeofday() { gettimeofday_speed = 1.0; }
 
 void set_gettimeofday(float a1) { gettimeofday_speed = a1; }
 
@@ -261,19 +261,17 @@ int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
 }
 
 int hook_clock_gettime(void) {
+  if (real_clock_gettime) {
+    return 0;
+  }
+
   return rebind_symbols(
       (struct rebinding[1]){
           {"clock_gettime", my_clock_gettime, (void *)&real_clock_gettime}},
       1);
 }
 
-void restore_clock_gettime(void) {
-  if (real_clock_gettime) {
-    rebind_symbols(
-        (struct rebinding[1]){{"clock_gettime", real_clock_gettime, NULL}}, 1);
-    real_clock_gettime = NULL;
-  }
-}
+void restore_clock_gettime(void) { clock_gettime_speed = 1.0; }
 
 void set_clock_gettime(float a1) { clock_gettime_speed = a1; }
 
@@ -331,14 +329,14 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   UIUserInterfaceIdiom idiom = device.userInterfaceIdiom;
 
   if (idiom == UIUserInterfaceIdiomPhone) {
-    initialH = 36;
+    initialH = 32;
   } else if (idiom == UIUserInterfaceIdiomPad) {
-    initialH = 56;
+    initialH = 52;
   } else {
-    initialH = 76;
+    initialH = 72;
   }
   CGFloat initialY = screenHeight / 5;
-  CGFloat initialX = screenWidth - initialH * 5 - 20;
+  CGFloat initialX = screenWidth - initialH * 5;
   CGFloat initialW = initialH * 5;
 
   self =
