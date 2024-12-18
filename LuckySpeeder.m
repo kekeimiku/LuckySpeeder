@@ -320,14 +320,18 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 
 - (instancetype)init {
 
+#if TARGET_OS_VISION
+  CGFloat screenWidth = 1280;
+  CGFloat screenHeight = 720;
+#else
   CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
   CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
+#endif
 
   CGFloat initialH;
 
   UIDevice *device = [UIDevice currentDevice];
   UIUserInterfaceIdiom idiom = device.userInterfaceIdiom;
-
   if (idiom == UIUserInterfaceIdiomPhone) {
     initialH = 32;
   } else if (idiom == UIUserInterfaceIdiomPad) {
@@ -335,8 +339,9 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   } else {
     initialH = 72;
   }
+
   CGFloat initialY = screenHeight / 5;
-  CGFloat initialX = screenWidth - initialH * 5;
+  CGFloat initialX = screenWidth - initialH * 5 - 20;
   CGFloat initialW = initialH * 5;
 
   self =
@@ -564,9 +569,9 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 
 - (void)initHook {
   switch (self.currentMod) {
-  case M1: {
+  case M1:
     hook_timeScale();
-  } break;
+    break;
   case M2:
     hook_gettimeofday();
     break;
@@ -599,13 +604,22 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 static void didFinishLaunching(CFNotificationCenterRef center, void *observer,
                                CFStringRef name, const void *object,
                                CFDictionaryRef info) {
-  dispatch_after(dispatch_time((0ull), 3 * 1000000000ull),
-                 dispatch_get_main_queue(), ^{
-                   UIViewController *controller =
-                       [[[[UIApplication sharedApplication] delegate] window]
-                           rootViewController];
-                   [controller.view addSubview:WindowView.sharedInstance];
-                 });
+  dispatch_after(
+      dispatch_time((0ull), 3 * 1000000000ull), dispatch_get_main_queue(), ^{
+
+#if TARGET_OS_VISION
+        UIWindowScene *windowScene = (UIWindowScene *)
+            [[UIApplication sharedApplication].connectedScenes anyObject];
+        UIViewController *controller =
+            windowScene.windows.firstObject.rootViewController;
+#else
+   UIViewController *controller =
+             [[[[UIApplication sharedApplication] delegate] window]
+                 rootViewController];
+#endif
+
+        [controller.view addSubview:WindowView.sharedInstance];
+      });
 }
 
 __attribute__((constructor)) static void initialize(int argc,

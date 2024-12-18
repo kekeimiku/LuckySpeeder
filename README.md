@@ -1,6 +1,6 @@
 # Lucky Speeder
 
-> Support (Jailbreak/Jailed) iphoneos-version>=13.0
+> Support (Jailbreak/Jailed) IOS>=13.1/macOS>=12.1/visionOS>=1.0
 
 ## What's this
 

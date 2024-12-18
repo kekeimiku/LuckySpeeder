@@ -1,4 +1,5 @@
 **/.DS_Store
 *.dylib
 .cache
+out
 compile_commands.json
