@@ -323,6 +323,17 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 #if TARGET_OS_VISION
   CGFloat screenWidth = 1280;
   CGFloat screenHeight = 720;
+  for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
+    if ([scene isKindOfClass:[UIWindowScene class]]) {
+      UIWindow *window = ((UIWindowScene *)scene).windows.firstObject;
+      if (window) {
+        CGRect windowBounds = window.bounds;
+        screenWidth = windowBounds.size.width;
+        screenHeight = windowBounds.size.height;
+      }
+      break;
+    }
+  }
 #else
   CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
   CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;

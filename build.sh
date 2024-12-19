@@ -56,7 +56,7 @@ for target in "$@"; do
 
         $clang -dynamiclib \
             -x objective-c \
-            -target arm64-apple-xros \
+            -target arm64-apple-xros1.0 \
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
