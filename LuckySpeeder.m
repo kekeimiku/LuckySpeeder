@@ -38,13 +38,13 @@ static float timeScale_speed = 1.0;
 
 static void (*real_timeScale)(float) = NULL;
 
-void my_timeScale() {
+void my_timeScale(void) {
   if (real_timeScale) {
     real_timeScale(timeScale_speed);
   }
 }
 
-int hook_timeScale() {
+int hook_timeScale(void) {
   if (real_timeScale) {
     return 0;
   }
@@ -165,7 +165,7 @@ void set_timeScale(float a1) {
   my_timeScale();
 }
 
-void restore_timeScale() { set_timeScale(1.0); }
+void restore_timeScale(void) { set_timeScale(1.0); }
 
 // hook system gettimeofday and clock_gettime
 
@@ -213,7 +213,7 @@ int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
   return ret;
 }
 
-int hook_gettimeofday() {
+int hook_gettimeofday(void) {
   if (real_gettimeofday) {
     return 0;
   }
@@ -222,7 +222,7 @@ int hook_gettimeofday() {
                         1);
 }
 
-void restore_gettimeofday() { gettimeofday_speed = 1.0; }
+void restore_gettimeofday(void) { gettimeofday_speed = 1.0; }
 
 void set_gettimeofday(float a1) { gettimeofday_speed = a1; }
 
@@ -279,10 +279,6 @@ void set_clock_gettime(float a1) { clock_gettime_speed = a1; }
 
 @interface WindowView : UIView
 
-@end
-
-@interface WindowView ()
-
 @property(nonatomic, strong) UIView *uiContainer;
 
 @property(nonatomic, assign) CGPoint lastLocation;
@@ -304,6 +300,7 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 @property(nonatomic, assign) NSInteger currentIndex;
 
 + (id)sharedInstance;
+
 @end
 
 @implementation WindowView
@@ -480,6 +477,14 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 - (void)Button1Changed {
   self.userInteractionEnabled = NO;
 
+  if (self.button5.isSelected) {
+    [self restoreHook];
+    [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
+                                   withConfiguration:self.symbolConfiguration]
+                  forState:UIControlStateNormal];
+    self.button5.selected = NO;
+  }
+
   NSString *stateSymbol = @"";
   switch (self.currentMod) {
   case M1:
@@ -503,14 +508,6 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   [self.button1 setImage:[UIImage systemImageNamed:stateSymbol
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
-
-  if (self.button5.isSelected) {
-    [self restoreHook];
-    [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
-                                   withConfiguration:self.symbolConfiguration]
-                  forState:UIControlStateNormal];
-    self.button5.selected = NO;
-  }
 
   self.userInteractionEnabled = YES;
 }
@@ -633,9 +630,7 @@ static void didFinishLaunching(CFNotificationCenterRef center, void *observer,
       });
 }
 
-__attribute__((constructor)) static void initialize(int argc,
-                                                    const char **argv) {
-
+__attribute__((constructor)) static void initialize(void) {
   CFNotificationCenterAddObserver(
       CFNotificationCenterGetLocalCenter(), NULL, &didFinishLaunching,
       (CFStringRef)UIApplicationDidFinishLaunchingNotification, NULL,
