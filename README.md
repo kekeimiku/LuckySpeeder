@@ -4,7 +4,7 @@
 
 ## What's this
 
-Hacking Applications: Four modes are available for controlling Game/Ads speed.
+Hacking Applications: Four modes are available for controlling Game speed.
 
 It is not guaranteed to work for all programs; some luck may be required.
 
@@ -22,19 +22,9 @@ https://github.com/user-attachments/assets/a2b7b4c2-d7c7-47e8-83b7-be36b3328502
 
 Inject [LuckySpeeder.dylib](https://github.com/kekeimiku/LuckySpeeder/releases) into your IPA file.
 
-Google Search: [How to inject dylib into ipa](https://www.google.com/search?client=safari&rls=en&q=How+to+inject+dylib+into+ipa)
+Google Search: [How to inject dylib into ipa](https://www.google.com/search?q=How+to+inject+dylib+into+ipa)
 
 PS: You can work without injecting tools like CydiaSubstrate or Substitute.
-
-## TODO
-
-- [x] Support PlayCover IOS App
-
-- [x] Speed up common games
-
-- [ ] Speed ​​up common ads
-
-- [ ] Hide Control Menu
 
 ## Tested Games
 
