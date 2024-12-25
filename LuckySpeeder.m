@@ -356,22 +356,16 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
       [super initWithFrame:CGRectMake(initialX, initialY, initialW, initialH)];
 
   CGFloat buttonWidth = self.bounds.size.height;
-  CGFloat Size = buttonWidth * 0.5;
+  CGFloat fontSize = buttonWidth * 0.5;
   self.symbolConfiguration =
-      [UIImageSymbolConfiguration configurationWithPointSize:Size];
+      [UIImageSymbolConfiguration configurationWithPointSize:fontSize];
 
-  self.backgroundColor = [UIColor systemBackgroundColor];
+  self.backgroundColor = [UIColor opaqueSeparatorColor];
   self.layer.masksToBounds = YES;
   self.layer.cornerRadius = buttonWidth / 2 - 5;
-
-  self.layer.shadowColor = [UIColor systemBackgroundColor].CGColor;
+  self.layer.shadowColor = [UIColor opaqueSeparatorColor].CGColor;
   self.layer.shadowOpacity = 0.5;
   self.layer.shadowOffset = CGSizeMake(0, 0);
-
-  UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]
-      initWithTarget:self
-              action:@selector(handlePanGesture:)];
-  [self addGestureRecognizer:panGesture];
 
   self.uiContainer = [[UIView alloc] initWithFrame:self.bounds];
   [self addSubview:self.uiContainer];
@@ -390,9 +384,7 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   [self.button1 setImage:[UIImage systemImageNamed:@"suit.heart.fill"
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
-  self.button1.backgroundColor = [UIColor systemBackgroundColor];
-  self.button1.titleLabel.font = [UIFont systemFontOfSize:Size];
-  [self.button1 setTitleColor:self.tintColor forState:UIControlStateNormal];
+  self.button1.titleLabel.font = [UIFont systemFontOfSize:fontSize];
   [self.button1 addTarget:self
                    action:@selector(Button1Changed)
          forControlEvents:UIControlEventTouchUpInside];
@@ -403,7 +395,6 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   [self.button2 setImage:[UIImage systemImageNamed:@"backward.fill"
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
-  self.button2.backgroundColor = [UIColor systemBackgroundColor];
   [self.button2 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button2 addTarget:self
                    action:@selector(Button2Changed)
@@ -414,7 +405,6 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   self.button3.frame = CGRectMake(2 * buttonWidth, 0, buttonWidth, buttonWidth);
   [self.button3 setTitle:[self.speedValues[self.currentIndex] stringValue]
                 forState:UIControlStateNormal];
-  self.button3.backgroundColor = [UIColor systemBackgroundColor];
   self.button3.titleLabel.font = [UIFont systemFontOfSize:buttonWidth * 0.5];
   [self.button3 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button3 addTarget:self
@@ -427,8 +417,6 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   [self.button4 setImage:[UIImage systemImageNamed:@"forward.fill"
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
-  self.button4.backgroundColor = [UIColor systemBackgroundColor];
-  [self.button4 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button4 addTarget:self
                    action:@selector(Button4Changed)
          forControlEvents:UIControlEventTouchUpInside];
@@ -439,12 +427,15 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
-  self.button5.backgroundColor = [UIColor systemBackgroundColor];
-  [self.button5 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button5 addTarget:self
                    action:@selector(Button5Changed)
          forControlEvents:UIControlEventTouchUpInside];
   [self.uiContainer addSubview:self.button5];
+
+  UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]
+      initWithTarget:self
+              action:@selector(handlePanGesture:)];
+  [self addGestureRecognizer:panGesture];
 
   return self;
 }
@@ -613,19 +604,12 @@ static void didFinishLaunching(CFNotificationCenterRef center, void *observer,
                                CFStringRef name, const void *object,
                                CFDictionaryRef info) {
   dispatch_after(
-      dispatch_time((0ull), 3 * 1000000000ull), dispatch_get_main_queue(), ^{
-
-#if TARGET_OS_VISION
+      dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
+      dispatch_get_main_queue(), ^{
         UIWindowScene *windowScene = (UIWindowScene *)
             [[UIApplication sharedApplication].connectedScenes anyObject];
         UIViewController *controller =
             windowScene.windows.firstObject.rootViewController;
-#else
-   UIViewController *controller =
-             [[[[UIApplication sharedApplication] delegate] window]
-                 rootViewController];
-#endif
-
         [controller.view addSubview:WindowView.sharedInstance];
       });
 }

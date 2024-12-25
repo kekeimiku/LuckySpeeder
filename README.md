@@ -1,6 +1,7 @@
 # Lucky Speeder
 
-> Support (Jailbreak/Jailed) IOS>=13.1/macOS>=12.1/visionOS>=1.0
+> Support (Jailbreak/Jailed)  
+> iOS 13.1+ | iPadOS 13.1+ | Mac Catalyst 13.1+ | visionOS 1.0+ | tvOS 13.2+  
 
 ## What's this
 

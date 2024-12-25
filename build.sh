@@ -3,7 +3,7 @@
 set -e
 
 if [[ $# -eq 0 ]]; then
-    echo "Usage: $0 [arm64-apple-ios|arm64-apple-ios-macabi|arm64-apple-xros]"
+    echo "Usage: $0 [arm64-apple-ios|arm64-apple-ios-macabi|arm64-apple-xros|arm64-apple-tvos]"
     exit 1
 fi
 
@@ -64,9 +64,26 @@ for target in "$@"; do
             -Ofast \
             -flto
         ;;
+    arm64-apple-tvos)
+        echo "Building for $target..."
+        clang=$(xcrun --sdk appletvos -f clang)
+        sdk_dir=$(xcrun --sdk appletvos --show-sdk-path)
+        out_dir=$OUTPUT_DIR/$target
+        mkdir -p $out_dir
+
+        $clang -dynamiclib \
+            -x objective-c \
+            -target arm64-apple-tvos13.2 \
+            -isysroot $sdk_dir \
+            -framework Foundation \
+            -framework UIKit \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m \
+            -Ofast \
+            -flto
+        ;;
     *)
         echo "Invalid target: $target"
-        echo "Usage: $0 [arm64-apple-ios|arm64-apple-ios-macabi|arm64-apple-xros]"
+        echo "Usage: $0 [arm64-apple-ios|arm64-apple-ios-macabi|arm64-apple-xros|arm64-apple-tvos]"
         exit 1
         ;;
     esac
