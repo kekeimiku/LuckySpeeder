@@ -299,8 +299,6 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 
 @property(nonatomic, assign) NSInteger currentIndex;
 
-+ (id)sharedInstance;
-
 @end
 
 @implementation WindowView
@@ -317,24 +315,11 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 
 - (instancetype)init {
 
-#if TARGET_OS_VISION
-  CGFloat screenWidth = 1280;
-  CGFloat screenHeight = 720;
-  for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
-    if ([scene isKindOfClass:[UIWindowScene class]]) {
-      UIWindow *window = ((UIWindowScene *)scene).windows.firstObject;
-      if (window) {
-        CGRect windowBounds = window.bounds;
-        screenWidth = windowBounds.size.width;
-        screenHeight = windowBounds.size.height;
-      }
-      break;
-    }
-  }
-#else
-  CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
-  CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height;
-#endif
+  UIWindowScene *windowScene = (UIWindowScene *)
+      [[UIApplication sharedApplication].connectedScenes anyObject];
+  CGSize windowSize = windowScene.windows.firstObject.bounds.size;
+  CGFloat windowWidth = windowSize.width;
+  CGFloat windowHeight = windowSize.height;
 
   CGFloat initialH;
 
@@ -348,8 +333,8 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
     initialH = 72;
   }
 
-  CGFloat initialY = screenHeight / 5;
-  CGFloat initialX = screenWidth - initialH * 5 - 20;
+  CGFloat initialY = windowHeight / 5;
+  CGFloat initialX = windowWidth - initialH * 5 - 20;
   CGFloat initialW = initialH * 5;
 
   self =
@@ -604,7 +589,7 @@ static void didFinishLaunching(CFNotificationCenterRef center, void *observer,
                                CFStringRef name, const void *object,
                                CFDictionaryRef info) {
   dispatch_after(
-      dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
+      dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
       dispatch_get_main_queue(), ^{
         UIWindowScene *windowScene = (UIWindowScene *)
             [[UIApplication sharedApplication].connectedScenes anyObject];
