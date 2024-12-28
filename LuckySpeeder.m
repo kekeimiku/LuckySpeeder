@@ -277,15 +277,15 @@ void set_clock_gettime(float a1) { clock_gettime_speed = a1; }
 
 // UI
 
-@interface WindowView : UIView
+@interface LuckySpeederView : UIView
 
 @property(nonatomic, strong) UIView *uiContainer;
 
 @property(nonatomic, assign) CGPoint lastLocation;
 
-typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
+typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
 
-@property(nonatomic, assign) SwitchMod currentMod;
+@property(nonatomic, assign) SpeedMode currentMod;
 
 @property(nonatomic, strong) UIButton *button1;
 @property(nonatomic, strong) UIButton *button2;
@@ -301,7 +301,7 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 
 @end
 
-@implementation WindowView
+@implementation LuckySpeederView
 
 + (id)sharedInstance {
   static UIView *ui;
@@ -326,11 +326,11 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   UIDevice *device = [UIDevice currentDevice];
   UIUserInterfaceIdiom idiom = device.userInterfaceIdiom;
   if (idiom == UIUserInterfaceIdiomPhone) {
-    initialH = 32;
+    initialH = 30;
   } else if (idiom == UIUserInterfaceIdiomPad) {
-    initialH = 52;
+    initialH = 50;
   } else {
-    initialH = 72;
+    initialH = 70;
   }
 
   CGFloat initialY = windowHeight / 5;
@@ -341,7 +341,7 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
       [super initWithFrame:CGRectMake(initialX, initialY, initialW, initialH)];
 
   CGFloat buttonWidth = self.bounds.size.height;
-  CGFloat fontSize = buttonWidth * 0.5;
+  CGFloat fontSize = buttonWidth * 0.44;
   self.symbolConfiguration =
       [UIImageSymbolConfiguration configurationWithPointSize:fontSize];
 
@@ -355,7 +355,7 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   self.uiContainer = [[UIView alloc] initWithFrame:self.bounds];
   [self addSubview:self.uiContainer];
 
-  self.currentMod = M1;
+  self.currentMod = Heart;
 
   self.speedValues = @[
     @0.1, @0.25, @0.5, @0.75, @0.9, @1,   @1.1, @1.2, @1.3, @1.4, @1.5, @1.6,
@@ -380,7 +380,6 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   [self.button2 setImage:[UIImage systemImageNamed:@"backward.fill"
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
-  [self.button2 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button2 addTarget:self
                    action:@selector(Button2Changed)
          forControlEvents:UIControlEventTouchUpInside];
@@ -463,21 +462,21 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
 
   NSString *stateSymbol = @"";
   switch (self.currentMod) {
-  case M1:
+  case Heart:
     stateSymbol = @"suit.spade.fill";
-    self.currentMod = M2;
+    self.currentMod = Spade;
     break;
-  case M2:
+  case Spade:
     stateSymbol = @"suit.club.fill";
-    self.currentMod = M3;
+    self.currentMod = Club;
     break;
-  case M3:
+  case Club:
     stateSymbol = @"suit.diamond.fill";
-    self.currentMod = M4;
+    self.currentMod = Diamond;
     break;
-  case M4:
+  case Diamond:
     stateSymbol = @"suit.heart.fill";
-    self.currentMod = M1;
+    self.currentMod = Heart;
     break;
   }
 
@@ -535,50 +534,50 @@ typedef NS_ENUM(NSUInteger, SwitchMod) { M1, M2, M3, M4 };
   self.userInteractionEnabled = YES;
 }
 
-- (void)updateSpeed:(float)speed {
+- (void)updateSpeed:(float)value {
   switch (self.currentMod) {
-  case M1:
-    set_timeScale(speed);
+  case Heart:
+    set_timeScale(value);
     break;
-  case M2:
-    set_gettimeofday(speed);
+  case Spade:
+    set_gettimeofday(value);
     break;
-  case M3:
-    set_clock_gettime(speed);
+  case Club:
+    set_clock_gettime(value);
     break;
-  case M4:
+  case Diamond:
     break;
   }
 }
 
 - (void)initHook {
   switch (self.currentMod) {
-  case M1:
+  case Heart:
     hook_timeScale();
     break;
-  case M2:
+  case Spade:
     hook_gettimeofday();
     break;
-  case M3:
+  case Club:
     hook_clock_gettime();
     break;
-  case M4:
+  case Diamond:
     break;
   }
 }
 
 - (void)restoreHook {
   switch (self.currentMod) {
-  case M1:
+  case Heart:
     restore_timeScale();
     break;
-  case M2:
+  case Spade:
     restore_gettimeofday();
     break;
-  case M3:
+  case Club:
     restore_clock_gettime();
     break;
-  case M4:
+  case Diamond:
     break;
   }
 }
@@ -595,7 +594,7 @@ static void didFinishLaunching(CFNotificationCenterRef center, void *observer,
             [[UIApplication sharedApplication].connectedScenes anyObject];
         UIViewController *controller =
             windowScene.windows.firstObject.rootViewController;
-        [controller.view addSubview:WindowView.sharedInstance];
+        [controller.view addSubview:LuckySpeederView.sharedInstance];
       });
 }
 
