@@ -326,11 +326,11 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   UIDevice *device = [UIDevice currentDevice];
   UIUserInterfaceIdiom idiom = device.userInterfaceIdiom;
   if (idiom == UIUserInterfaceIdiomPhone) {
-    initialH = 30;
+    initialH = 34;
   } else if (idiom == UIUserInterfaceIdiomPad) {
-    initialH = 50;
+    initialH = 48;
   } else {
-    initialH = 70;
+    initialH = 72;
   }
 
   CGFloat initialY = windowHeight / 5;
@@ -389,7 +389,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   self.button3.frame = CGRectMake(2 * buttonWidth, 0, buttonWidth, buttonWidth);
   [self.button3 setTitle:[self.speedValues[self.currentIndex] stringValue]
                 forState:UIControlStateNormal];
-  self.button3.titleLabel.font = [UIFont systemFontOfSize:buttonWidth * 0.5];
+  self.button3.titleLabel.font = [UIFont systemFontOfSize:fontSize];
   [self.button3 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button3 addTarget:self
                    action:@selector(Button3Changed)
