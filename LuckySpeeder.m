@@ -160,17 +160,18 @@ int hook_timeScale(void) {
   return -1;
 }
 
-void set_timeScale(float a1) {
-  timeScale_speed = a1;
+void set_timeScale(float value) {
+  timeScale_speed = value;
   my_timeScale();
 }
 
-void restore_timeScale(void) { set_timeScale(1.0); }
+void reset_timeScale(void) { set_timeScale(1.0); }
 
-// hook system gettimeofday and clock_gettime
+// hook system gettimeofday clock_gettime mach_absolute_time
 
 static float gettimeofday_speed = 1.0;
 static float clock_gettime_speed = 1.0;
+static float mach_absolute_time_speed = 1.0;
 
 static time_t pre_sec;
 static suseconds_t pre_usec;
@@ -191,16 +192,16 @@ int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
       pre_usec = tv->tv_usec;
       true_pre_usec = tv->tv_usec;
     } else {
-      int64_t true_curSec = tv->tv_sec * USec_Scale + tv->tv_usec;
+      int64_t true_cur_sec = tv->tv_sec * USec_Scale + tv->tv_usec;
       int64_t true_preSec = true_pre_sec * USec_Scale + true_pre_usec;
-      int64_t invl = true_curSec - true_preSec;
+      int64_t invl = true_cur_sec - true_preSec;
       invl *= gettimeofday_speed;
 
-      int64_t curSec = pre_sec * USec_Scale + pre_usec;
-      curSec += invl;
+      int64_t cur_sec = pre_sec * USec_Scale + pre_usec;
+      cur_sec += invl;
 
-      time_t used_sec = curSec / USec_Scale;
-      suseconds_t used_usec = curSec % USec_Scale;
+      time_t used_sec = cur_sec / USec_Scale;
+      suseconds_t used_usec = cur_sec % USec_Scale;
 
       true_pre_sec = tv->tv_sec;
       true_pre_usec = tv->tv_usec;
@@ -222,9 +223,9 @@ int hook_gettimeofday(void) {
                         1);
 }
 
-void restore_gettimeofday(void) { gettimeofday_speed = 1.0; }
+void reset_gettimeofday(void) { gettimeofday_speed = 1.0; }
 
-void set_gettimeofday(float a1) { gettimeofday_speed = a1; }
+void set_gettimeofday(float value) { gettimeofday_speed = value; }
 
 static int (*real_clock_gettime)(clockid_t clock_id,
                                  struct timespec *tp) = NULL;
@@ -238,16 +239,16 @@ int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
       pre_usec = tp->tv_nsec;
       true_pre_usec = tp->tv_nsec;
     } else {
-      int64_t true_curSec = tp->tv_sec * NSec_Scale + tp->tv_nsec;
-      int64_t true_preSec = true_pre_sec * NSec_Scale + true_pre_usec;
-      int64_t invl = true_curSec - true_preSec;
+      int64_t true_cur_sec = tp->tv_sec * NSec_Scale + tp->tv_nsec;
+      int64_t true_pre_sec = true_pre_sec * NSec_Scale + true_pre_usec;
+      int64_t invl = true_cur_sec - true_pre_sec;
       invl *= clock_gettime_speed;
 
-      int64_t curSec = pre_sec * NSec_Scale + pre_usec;
-      curSec += invl;
+      int64_t cur_sec = pre_sec * NSec_Scale + pre_usec;
+      cur_sec += invl;
 
-      time_t used_sec = curSec / NSec_Scale;
-      suseconds_t used_usec = curSec % NSec_Scale;
+      time_t used_sec = cur_sec / NSec_Scale;
+      suseconds_t used_usec = cur_sec % NSec_Scale;
 
       true_pre_sec = tp->tv_sec;
       true_pre_usec = tp->tv_nsec;
@@ -271,9 +272,51 @@ int hook_clock_gettime(void) {
       1);
 }
 
-void restore_clock_gettime(void) { clock_gettime_speed = 1.0; }
+void reset_clock_gettime(void) { clock_gettime_speed = 1.0; }
 
-void set_clock_gettime(float a1) { clock_gettime_speed = a1; }
+void set_clock_gettime(float value) { clock_gettime_speed = value; }
+
+static uint64_t (*real_mach_absolute_time)(void) = NULL;
+
+static bool init_mach_absolute_time;
+static uint64_t mach_absolute_base_time;
+static uint64_t mach_absolute_start_time;
+static uint64_t mach_absolute_last_time;
+
+uint64_t my_mach_absolute_time(void) {
+  uint64_t result;
+  uint64_t current_time = real_mach_absolute_time();
+
+  if (!init_mach_absolute_time) {
+    init_mach_absolute_time = true;
+    mach_absolute_base_time = current_time;
+    mach_absolute_start_time =
+        (mach_absolute_last_time != 0) ? mach_absolute_last_time : current_time;
+    result = mach_absolute_start_time;
+  } else {
+    result = (uint64_t)(mach_absolute_start_time +
+                        (current_time - mach_absolute_base_time) *
+                            mach_absolute_time_speed);
+  }
+
+  mach_absolute_last_time = result;
+
+  return result;
+}
+
+int hook_mach_absolute_time(void) {
+  if (real_mach_absolute_time) {
+    return 0;
+  }
+  return rebind_symbols(
+      (struct rebinding[1]){{"mach_absolute_time", my_mach_absolute_time,
+                             (void *)&real_mach_absolute_time}},
+      1);
+}
+
+void reset_mach_absolute_time(void) { mach_absolute_time_speed = 1.0; }
+
+void set_mach_absolute_time(float value) { mach_absolute_time_speed = value; }
 
 // UI
 
@@ -453,7 +496,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   self.userInteractionEnabled = NO;
 
   if (self.button5.isSelected) {
-    [self restoreHook];
+    [self resetHook];
     [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
                                    withConfiguration:self.symbolConfiguration]
                   forState:UIControlStateNormal];
@@ -517,7 +560,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   self.userInteractionEnabled = NO;
 
   if (self.button5.isSelected) {
-    [self restoreHook];
+    [self resetHook];
     [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
                                    withConfiguration:self.symbolConfiguration]
                   forState:UIControlStateNormal];
@@ -546,6 +589,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
     set_clock_gettime(value);
     break;
   case Diamond:
+    set_mach_absolute_time(value);
     break;
   }
 }
@@ -562,22 +606,24 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
     hook_clock_gettime();
     break;
   case Diamond:
+    hook_mach_absolute_time();
     break;
   }
 }
 
-- (void)restoreHook {
+- (void)resetHook {
   switch (self.currentMod) {
   case Heart:
-    restore_timeScale();
+    reset_timeScale();
     break;
   case Spade:
-    restore_gettimeofday();
+    reset_gettimeofday();
     break;
   case Club:
-    restore_clock_gettime();
+    reset_clock_gettime();
     break;
   case Diamond:
+    reset_mach_absolute_time();
     break;
   }
 }
