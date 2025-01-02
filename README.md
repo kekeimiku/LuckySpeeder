@@ -39,6 +39,8 @@ PS: You can work without injecting tools like CydiaSubstrate or Substitute.
 
 [Laya's Horizon](https://apps.apple.com/us/app/layas-horizon/id1615116545)
 
+[Kingdom Rush Tower Defense](https://apps.apple.com/us/app/kingdom-rush-tower-defense-td/id516378985)
+
 And more...
 
 ## FAQ
