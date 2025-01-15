@@ -24,9 +24,10 @@ for target in "$@"; do
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
             -Ofast \
             -flto
+        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-ios-macabi)
         echo "Building for $target..."
@@ -43,9 +44,10 @@ for target in "$@"; do
             -iframework $sdk_dir/System/iOSSupport/System/Library/Frameworks \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
             -Ofast \
             -flto
+        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-xros)
         echo "Building for $target..."
@@ -60,9 +62,10 @@ for target in "$@"; do
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
             -Ofast \
             -flto
+        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-tvos)
         echo "Building for $target..."
@@ -77,9 +80,10 @@ for target in "$@"; do
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
             -Ofast \
             -flto
+        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     *)
         echo "Invalid target: $target"

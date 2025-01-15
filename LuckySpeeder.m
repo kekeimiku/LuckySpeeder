@@ -30,8 +30,6 @@ SOFTWARE.
 
 @interface LuckySpeederView : UIView
 
-@property(nonatomic, strong) UIView *uiContainer;
-
 @property(nonatomic, assign) CGPoint lastLocation;
 
 typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
@@ -84,9 +82,9 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
     initialH = 72;
   }
 
-  CGFloat initialY = windowHeight / 5;
-  CGFloat initialX = windowWidth - initialH * 5 - 20;
   CGFloat initialW = initialH * 5;
+  CGFloat initialX = windowWidth - initialH * 5 - 20;
+  CGFloat initialY = windowHeight / 5;
 
   self =
       [super initWithFrame:CGRectMake(initialX, initialY, initialW, initialH)];
@@ -102,9 +100,6 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   self.layer.shadowColor = [UIColor opaqueSeparatorColor].CGColor;
   self.layer.shadowOpacity = 0.5;
   self.layer.shadowOffset = CGSizeMake(0, 0);
-
-  self.uiContainer = [[UIView alloc] initWithFrame:self.bounds];
-  [self addSubview:self.uiContainer];
 
   self.currentMod = Heart;
 
@@ -124,7 +119,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   [self.button1 addTarget:self
                    action:@selector(Button1Changed)
          forControlEvents:UIControlEventTouchUpInside];
-  [self.uiContainer addSubview:self.button1];
+  [self addSubview:self.button1];
 
   self.button2 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button2.frame = CGRectMake(buttonWidth, 0, buttonWidth, buttonWidth);
@@ -134,7 +129,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   [self.button2 addTarget:self
                    action:@selector(Button2Changed)
          forControlEvents:UIControlEventTouchUpInside];
-  [self.uiContainer addSubview:self.button2];
+  [self addSubview:self.button2];
 
   self.button3 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button3.frame = CGRectMake(2 * buttonWidth, 0, buttonWidth, buttonWidth);
@@ -145,7 +140,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   [self.button3 addTarget:self
                    action:@selector(Button3Changed)
          forControlEvents:UIControlEventTouchUpInside];
-  [self.uiContainer addSubview:self.button3];
+  [self addSubview:self.button3];
 
   self.button4 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button4.frame = CGRectMake(3 * buttonWidth, 0, buttonWidth, buttonWidth);
@@ -155,7 +150,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   [self.button4 addTarget:self
                    action:@selector(Button4Changed)
          forControlEvents:UIControlEventTouchUpInside];
-  [self.uiContainer addSubview:self.button4];
+  [self addSubview:self.button4];
 
   self.button5 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button5.frame = CGRectMake(4 * buttonWidth, 0, buttonWidth, buttonWidth);
@@ -165,7 +160,7 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   [self.button5 addTarget:self
                    action:@selector(Button5Changed)
          forControlEvents:UIControlEventTouchUpInside];
-  [self.uiContainer addSubview:self.button5];
+  [self addSubview:self.button5];
 
   UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]
       initWithTarget:self
