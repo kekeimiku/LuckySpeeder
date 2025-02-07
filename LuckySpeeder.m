@@ -25,28 +25,79 @@ SOFTWARE.
 
 */
 
-#include "LuckySpeeder.h"
-#include <UIKit/UIKit.h>
+#import "LuckySpeeder.h"
+#import <UIKit/UIKit.h>
+
+static float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
+                              1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
+                              2.1, 2.2,  2.3, 2.4,  2.5, 5.0, 10.0};
+static int currentIndex = 5;
+static float currentValue = 1.0;
+static int speedValuesCount = sizeof(speedValues) / sizeof(float);
+
+enum SpeedMode { Heart, Spade, Club, Diamond };
+static enum SpeedMode currentMod = Heart;
+
+static void updateSpeed(float value) {
+  switch (currentMod) {
+  case Heart:
+    set_timeScale(value);
+    break;
+  case Spade:
+    set_gettimeofday(value);
+    break;
+  case Club:
+    set_clock_gettime(value);
+    break;
+  case Diamond:
+    set_mach_absolute_time(value);
+    break;
+  }
+}
+
+static int initHook() {
+  switch (currentMod) {
+  case Heart:
+    return hook_timeScale();
+  case Spade:
+    return hook_gettimeofday();
+  case Club:
+    return hook_clock_gettime();
+  case Diamond:
+    return hook_mach_absolute_time();
+  }
+}
+
+static void resetHook() {
+  switch (currentMod) {
+  case Heart:
+    reset_timeScale();
+    return;
+  case Spade:
+    reset_gettimeofday();
+    return;
+  case Club:
+    reset_clock_gettime();
+    return;
+  case Diamond:
+    reset_mach_absolute_time();
+    return;
+  }
+}
 
 @interface LuckySpeederView : UIView
 
 @property(nonatomic, assign) CGPoint lastLocation;
-
-typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
-
-@property(nonatomic, assign) SpeedMode currentMod;
-
+@property(nonatomic, assign) CGFloat windowWidth;
+@property(nonatomic, assign) CGFloat windowHeight;
 @property(nonatomic, strong) UIButton *button1;
 @property(nonatomic, strong) UIButton *button2;
 @property(nonatomic, strong) UIButton *button3;
 @property(nonatomic, strong) UIButton *button4;
 @property(nonatomic, strong) UIButton *button5;
-
+@property(nonatomic, strong) UIButton *button6;
+@property(nonatomic, strong) NSTimer *idleTimer;
 @property(nonatomic, strong) UIImageSymbolConfiguration *symbolConfiguration;
-
-@property(nonatomic, strong) NSArray *speedValues;
-
-@property(nonatomic, assign) NSInteger currentIndex;
 
 @end
 
@@ -67,8 +118,8 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   UIWindowScene *windowScene = (UIWindowScene *)
       [[UIApplication sharedApplication].connectedScenes anyObject];
   CGSize windowSize = windowScene.windows.firstObject.bounds.size;
-  CGFloat windowWidth = windowSize.width;
-  CGFloat windowHeight = windowSize.height;
+  self.windowWidth = windowSize.width;
+  self.windowHeight = windowSize.height;
 
   CGFloat initialH;
 
@@ -83,8 +134,8 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   }
 
   CGFloat initialW = initialH * 5;
-  CGFloat initialX = windowWidth - initialH * 5 - 20;
-  CGFloat initialY = windowHeight / 5;
+  CGFloat initialX = self.windowWidth - initialH * 5 - 20;
+  CGFloat initialY = self.windowHeight / 5;
 
   self =
       [super initWithFrame:CGRectMake(initialX, initialY, initialW, initialH)];
@@ -96,19 +147,10 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
 
   self.backgroundColor = [UIColor opaqueSeparatorColor];
   self.layer.masksToBounds = YES;
-  self.layer.cornerRadius = buttonWidth / 2 - 5;
+  self.layer.cornerRadius = buttonWidth / 2;
   self.layer.shadowColor = [UIColor opaqueSeparatorColor].CGColor;
   self.layer.shadowOpacity = 0.5;
   self.layer.shadowOffset = CGSizeMake(0, 0);
-
-  self.currentMod = Heart;
-
-  self.speedValues = @[
-    @0.1, @0.25, @0.5, @0.75, @0.9, @1,   @1.1, @1.2, @1.3, @1.4, @1.5, @1.6,
-    @1.7, @1.8,  @1.9, @2,    @2.1, @2.2, @2.3, @2.4, @2.5, @5,   @10
-  ];
-
-  self.currentIndex = 5;
 
   self.button1 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button1.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
@@ -133,9 +175,10 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
 
   self.button3 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button3.frame = CGRectMake(2 * buttonWidth, 0, buttonWidth, buttonWidth);
-  [self.button3 setTitle:[self.speedValues[self.currentIndex] stringValue]
+  [self.button3 setTitle:[@(currentValue) stringValue]
                 forState:UIControlStateNormal];
   self.button3.titleLabel.font = [UIFont systemFontOfSize:fontSize];
+  self.button3.titleLabel.adjustsFontSizeToFitWidth = YES;
   [self.button3 setTitleColor:self.tintColor forState:UIControlStateNormal];
   [self.button3 addTarget:self
                    action:@selector(Button3Changed)
@@ -162,18 +205,41 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
          forControlEvents:UIControlEventTouchUpInside];
   [self addSubview:self.button5];
 
+  self.button6 = [UIButton buttonWithType:UIButtonTypeCustom];
+  [self.button6 setImage:[UIImage systemImageNamed:@"clock.fill"
+                                 withConfiguration:self.symbolConfiguration]
+                forState:UIControlStateNormal];
+  self.button6.hidden = YES;
+  [self.button6 addTarget:self
+                   action:@selector(Button6Changed)
+         forControlEvents:UIControlEventTouchUpInside];
+  [self addSubview:self.button6];
+
   UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]
       initWithTarget:self
               action:@selector(handlePanGesture:)];
   [self addGestureRecognizer:panGesture];
 
+  [self resetIdleTimer];
+
   return self;
+}
+
+- (void)resetIdleTimer {
+  [self.idleTimer invalidate];
+  self.idleTimer =
+      [NSTimer scheduledTimerWithTimeInterval:5.0
+                                       target:self
+                                     selector:@selector(hideSpeedView)
+                                     userInfo:nil
+                                      repeats:NO];
 }
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gesture {
   CGPoint translation = [gesture translationInView:self.superview];
   if (gesture.state == UIGestureRecognizerStateBegan) {
     self.lastLocation = self.center;
+    [self.idleTimer invalidate];
   }
 
   CGPoint newCenter = CGPointMake(self.lastLocation.x + translation.x,
@@ -192,14 +258,42 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
 
   if (gesture.state == UIGestureRecognizerStateEnded) {
     self.lastLocation = self.center;
+    [self resetIdleTimer];
   }
+}
+
+- (void)hideSpeedView {
+  if (!self.button6.hidden) {
+    return;
+  }
+
+  CGFloat buttonWidth = self.bounds.size.height;
+  CGFloat newX = self.center.x < self.windowWidth / 2
+                     ? self.frame.origin.x
+                     : self.frame.origin.x + 4 * buttonWidth;
+
+  [UIView animateWithDuration:0.4
+                   animations:^{
+                     self.frame = CGRectMake(newX, self.frame.origin.y,
+                                             buttonWidth, buttonWidth);
+                     self.alpha = 0.5;
+                     self.layer.cornerRadius = buttonWidth / 2;
+                   }];
+
+  self.button1.hidden = YES;
+  self.button2.hidden = YES;
+  self.button3.hidden = YES;
+  self.button4.hidden = YES;
+  self.button5.hidden = YES;
+  self.button6.frame = self.bounds;
+  self.button6.hidden = NO;
 }
 
 - (void)Button1Changed {
   self.userInteractionEnabled = NO;
 
   if (self.button5.isSelected) {
-    [self resetHook];
+    resetHook();
     [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
                                    withConfiguration:self.symbolConfiguration]
                   forState:UIControlStateNormal];
@@ -207,22 +301,22 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
   }
 
   NSString *stateSymbol = @"";
-  switch (self.currentMod) {
+  switch (currentMod) {
   case Heart:
     stateSymbol = @"suit.spade.fill";
-    self.currentMod = Spade;
+    currentMod = Spade;
     break;
   case Spade:
     stateSymbol = @"suit.club.fill";
-    self.currentMod = Club;
+    currentMod = Club;
     break;
   case Club:
     stateSymbol = @"suit.diamond.fill";
-    self.currentMod = Diamond;
+    currentMod = Diamond;
     break;
   case Diamond:
     stateSymbol = @"suit.heart.fill";
-    self.currentMod = Heart;
+    currentMod = Heart;
     break;
   }
 
@@ -230,105 +324,137 @@ typedef NS_ENUM(NSUInteger, SpeedMode) { Heart, Spade, Club, Diamond };
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
 
+  [self resetIdleTimer];
+
   self.userInteractionEnabled = YES;
 }
 
 - (void)Button2Changed {
-  if (self.currentIndex > 0) {
-    self.currentIndex--;
+  if (currentIndex > 0) {
+    currentIndex--;
+    currentValue = speedValues[currentIndex];
     if (self.button5.isSelected) {
-      [self updateSpeed:[self.speedValues[self.currentIndex] floatValue]];
+      updateSpeed(currentValue);
     }
-    [self.button3 setTitle:[self.speedValues[self.currentIndex] stringValue]
-                  forState:UIControlStateNormal];
   }
+  [self.button3 setTitle:[@(currentValue) stringValue]
+                forState:UIControlStateNormal];
+  [self resetIdleTimer];
 }
 
 - (void)Button3Changed {
-  // TODO
+  self.userInteractionEnabled = NO;
+  [self.idleTimer invalidate];
+
+  UIAlertController *alertController = [UIAlertController
+      alertControllerWithTitle:@"Custom Speed"
+                       message:@"Open Source: "
+                               @"\nhttps://github.com/kekeimiku/LuckySpeeder"
+                preferredStyle:UIAlertControllerStyleAlert];
+
+  [alertController
+      addTextFieldWithConfigurationHandler:^(UITextField *_Nonnull textField) {
+        textField.placeholder = @"0.1~999";
+        textField.keyboardType = UIKeyboardTypeDecimalPad;
+      }];
+
+  UIAlertAction *confirmAction = [UIAlertAction
+      actionWithTitle:@"OK"
+                style:UIAlertActionStyleDefault
+              handler:^(UIAlertAction *_Nonnull action) {
+                NSString *inputText =
+                    alertController.textFields.firstObject.text;
+                CGFloat inputValue = [inputText floatValue];
+                if (inputValue >= 0.1 && inputValue <= 999) {
+                  currentValue = inputValue;
+                  updateSpeed(currentValue);
+                  [self.button3
+                      setTitle:[NSString stringWithFormat:@"%.2f", currentValue]
+                      forState:UIControlStateNormal];
+                }
+                self.userInteractionEnabled = YES;
+                [self resetIdleTimer];
+              }];
+
+  UIAlertAction *cancelAction =
+      [UIAlertAction actionWithTitle:@"Cancel"
+                               style:UIAlertActionStyleDefault
+                             handler:^(UIAlertAction *_Nonnull action) {
+                               self.userInteractionEnabled = YES;
+                               [self resetIdleTimer];
+                             }];
+
+  [alertController addAction:confirmAction];
+  [alertController addAction:cancelAction];
+
+  UIWindowScene *windowScene = (UIWindowScene *)
+      [[UIApplication sharedApplication].connectedScenes anyObject];
+  UIViewController *controller =
+      windowScene.windows.firstObject.rootViewController;
+  [controller presentViewController:alertController
+                           animated:YES
+                         completion:nil];
 }
 
 - (void)Button4Changed {
-  if (self.currentIndex < self.speedValues.count - 1) {
-    self.currentIndex++;
+  if (currentIndex < speedValuesCount - 1) {
+    currentIndex++;
+    currentValue = speedValues[currentIndex];
     if (self.button5.isSelected) {
-      [self updateSpeed:[self.speedValues[self.currentIndex] floatValue]];
+      updateSpeed(currentValue);
     }
-    [self.button3 setTitle:[self.speedValues[self.currentIndex] stringValue]
-                  forState:UIControlStateNormal];
   }
+  [self.button3 setTitle:[@(currentValue) stringValue]
+                forState:UIControlStateNormal];
+  [self resetIdleTimer];
 }
 
 - (void)Button5Changed {
   self.userInteractionEnabled = NO;
 
   if (self.button5.isSelected) {
-    [self resetHook];
+    resetHook();
     [self.button5 setImage:[UIImage systemImageNamed:@"play.fill"
                                    withConfiguration:self.symbolConfiguration]
                   forState:UIControlStateNormal];
   } else {
-    [self initHook];
-    [self updateSpeed:[self.speedValues[self.currentIndex] floatValue]];
-
+    initHook();
+    updateSpeed(currentValue);
     [self.button5 setImage:[UIImage systemImageNamed:@"pause.fill"
                                    withConfiguration:self.symbolConfiguration]
                   forState:UIControlStateNormal];
   }
   self.button5.selected = !self.button5.selected;
 
+  [self resetIdleTimer];
+
   self.userInteractionEnabled = YES;
 }
 
-- (void)updateSpeed:(float)value {
-  switch (self.currentMod) {
-  case Heart:
-    set_timeScale(value);
-    break;
-  case Spade:
-    set_gettimeofday(value);
-    break;
-  case Club:
-    set_clock_gettime(value);
-    break;
-  case Diamond:
-    set_mach_absolute_time(value);
-    break;
-  }
-}
+- (void)Button6Changed {
+  CGFloat buttonWidth = self.frame.size.width;
+  CGFloat expandedWidth = buttonWidth * 5;
+  CGFloat newX = self.center.x < self.windowWidth / 2
+                     ? self.frame.origin.x
+                     : self.frame.origin.x - 4 * buttonWidth;
 
-- (void)initHook {
-  switch (self.currentMod) {
-  case Heart:
-    hook_timeScale();
-    break;
-  case Spade:
-    hook_gettimeofday();
-    break;
-  case Club:
-    hook_clock_gettime();
-    break;
-  case Diamond:
-    hook_mach_absolute_time();
-    break;
-  }
-}
+  [UIView animateWithDuration:0.4
+      animations:^{
+        self.frame = CGRectMake(newX, self.frame.origin.y, expandedWidth,
+                                self.frame.size.height);
+        self.alpha = 1.0;
+        self.layer.cornerRadius = buttonWidth / 2;
+      }
+      completion:^(BOOL finished) {
+        self.button1.hidden = NO;
+        self.button2.hidden = NO;
+        self.button3.hidden = NO;
+        self.button4.hidden = NO;
+        self.button5.hidden = NO;
+        self.button6.hidden = YES;
+      }];
 
-- (void)resetHook {
-  switch (self.currentMod) {
-  case Heart:
-    reset_timeScale();
-    break;
-  case Spade:
-    reset_gettimeofday();
-    break;
-  case Club:
-    reset_clock_gettime();
-    break;
-  case Diamond:
-    reset_mach_absolute_time();
-    break;
-  }
+  [self resetIdleTimer];
 }
 
 @end
