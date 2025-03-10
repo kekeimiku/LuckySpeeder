@@ -28,12 +28,12 @@ SOFTWARE.
 #import "LuckySpeeder.h"
 #import <UIKit/UIKit.h>
 
-static float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
-                              1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
-                              2.1, 2.2,  2.3, 2.4,  2.5, 5.0, 10.0};
+static const float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
+                                    1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
+                                    2.1, 2.2,  2.3, 2.4,  2.5, 5.0, 10.0};
 static int currentIndex = 5;
 static float currentValue = 1.0;
-static int speedValuesCount = sizeof(speedValues) / sizeof(float);
+static const int speedValuesCount = sizeof(speedValues) / sizeof(float);
 
 enum SpeedMode { Heart, Spade, Club, Diamond };
 static enum SpeedMode currentMod = Heart;
@@ -42,16 +42,16 @@ static void updateSpeed(float value) {
   switch (currentMod) {
   case Heart:
     set_timeScale(value);
-    break;
+    return;
   case Spade:
     set_gettimeofday(value);
-    break;
+    return;
   case Club:
     set_clock_gettime(value);
-    break;
+    return;
   case Diamond:
     set_mach_absolute_time(value);
-    break;
+    return;
   }
 }
 
@@ -367,7 +367,9 @@ static void resetHook() {
                 CGFloat inputValue = [inputText floatValue];
                 if (inputValue >= 0.1 && inputValue <= 999) {
                   currentValue = inputValue;
-                  updateSpeed(currentValue);
+                  if (self.button5.isSelected) {
+                    updateSpeed(currentValue);
+                  }
                   [self.button3
                       setTitle:[NSString stringWithFormat:@"%.2f", currentValue]
                       forState:UIControlStateNormal];

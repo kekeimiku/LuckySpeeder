@@ -92,8 +92,8 @@ int hook_timeScale(void) {
     if ((first_instruction & 0x9F000000) == 0x90000000 &&
         (second_instruction & 0xFF800000) == 0x91000000) {
       resolved_address = (il2cpp_section_base & 0xFFFFFFFFFFFFF000LL) +
-                         (int32_t)(((first_instruction >> 3) & 0xFFFFFFFC |
-                                    (first_instruction >> 29) & 3)
+                         (int32_t)((((first_instruction >> 3) & 0xFFFFFFFC) |
+                                    ((first_instruction >> 29) & 3))
                                    << 12);
       function_offset = (second_instruction >> 10) & 0xFFF;
       if ((second_instruction & 0xC00000) != 0)
@@ -117,8 +117,8 @@ int hook_timeScale(void) {
   } while ((current_instruction & 0x9F000000) != 0x90000000);
 
   code_section_address = (current_address & 0xFFFFFFFFFFFFF000LL) +
-                         (int32_t)(((current_instruction >> 3) & 0xFFFFFFFC |
-                                    (current_instruction >> 29) & 3)
+                         (int32_t)((((current_instruction >> 3) & 0xFFFFFFFC) |
+                                    ((current_instruction >> 29) & 3))
                                    << 12);
 
   uintptr_t method_data = *(uint32_t *)(current_address + 4);
@@ -179,6 +179,7 @@ static suseconds_t true_pre_usec;
 
 static int (*real_gettimeofday)(struct timeval *, void *) = NULL;
 
+// my_gettimeofday fix from AccDemo
 static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
   int ret = real_gettimeofday(tv, tz);
   if (!ret) {
@@ -188,16 +189,16 @@ static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
       pre_usec = tv->tv_usec;
       true_pre_usec = tv->tv_usec;
     } else {
-      int64_t true_cur_sec = tv->tv_sec * USec_Scale + tv->tv_usec;
+      int64_t true_curSec = tv->tv_sec * USec_Scale + tv->tv_usec;
       int64_t true_preSec = true_pre_sec * USec_Scale + true_pre_usec;
-      int64_t invl = true_cur_sec - true_preSec;
+      int64_t invl = true_curSec - true_preSec;
       invl *= gettimeofday_speed;
 
-      int64_t cur_sec = pre_sec * USec_Scale + pre_usec;
-      cur_sec += invl;
+      int64_t curSec = pre_sec * USec_Scale + pre_usec;
+      curSec += invl;
 
-      time_t used_sec = cur_sec / USec_Scale;
-      suseconds_t used_usec = cur_sec % USec_Scale;
+      time_t used_sec = curSec / USec_Scale;
+      suseconds_t used_usec = curSec % USec_Scale;
 
       true_pre_sec = tv->tv_sec;
       true_pre_usec = tv->tv_usec;
@@ -226,6 +227,7 @@ void set_gettimeofday(float value) { gettimeofday_speed = value; }
 static int (*real_clock_gettime)(clockid_t clock_id,
                                  struct timespec *tp) = NULL;
 
+// my_clock_gettime fix from AccDemo
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
   int ret = real_clock_gettime(clk_id, tp);
   if (!ret) {
@@ -235,16 +237,16 @@ static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
       pre_usec = tp->tv_nsec;
       true_pre_usec = tp->tv_nsec;
     } else {
-      int64_t true_cur_sec = tp->tv_sec * NSec_Scale + tp->tv_nsec;
-      int64_t true_pre_sec = true_pre_sec * NSec_Scale + true_pre_usec;
-      int64_t invl = true_cur_sec - true_pre_sec;
+      int64_t true_curSec = tp->tv_sec * NSec_Scale + tp->tv_nsec;
+      int64_t true_preSec = true_pre_sec * NSec_Scale + true_pre_usec;
+      int64_t invl = true_curSec - true_preSec;
       invl *= clock_gettime_speed;
 
-      int64_t cur_sec = pre_sec * NSec_Scale + pre_usec;
-      cur_sec += invl;
+      int64_t curSec = pre_sec * NSec_Scale + pre_usec;
+      curSec += invl;
 
-      time_t used_sec = cur_sec / NSec_Scale;
-      suseconds_t used_usec = cur_sec % NSec_Scale;
+      time_t used_sec = curSec / NSec_Scale;
+      suseconds_t used_usec = curSec % NSec_Scale;
 
       true_pre_sec = tp->tv_sec;
       true_pre_usec = tp->tv_nsec;

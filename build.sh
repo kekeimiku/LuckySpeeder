@@ -24,7 +24,7 @@ for target in "$@"; do
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c fishhook.c \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
@@ -44,7 +44,7 @@ for target in "$@"; do
             -iframework $sdk_dir/System/iOSSupport/System/Library/Frameworks \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c fishhook.c \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
@@ -62,7 +62,7 @@ for target in "$@"; do
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c fishhook.c \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
@@ -80,7 +80,7 @@ for target in "$@"; do
             -isysroot $sdk_dir \
             -framework Foundation \
             -framework UIKit \
-            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c \
+            -o $out_dir/LuckySpeeder.dylib LuckySpeeder.m LuckySpeeder.c fishhook.c \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
