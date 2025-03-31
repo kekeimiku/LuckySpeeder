@@ -24,7 +24,7 @@ for target in "$@"; do
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
-            -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            -o $out_dir/LuckySpeeder.dylib fishhook.c mach_excServer.c hwbphook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
@@ -43,7 +43,7 @@ for target in "$@"; do
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
-            -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            -o $out_dir/LuckySpeeder.dylib fishhook.c mach_excServer.c hwbphook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
@@ -61,7 +61,7 @@ for target in "$@"; do
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
-            -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            -o $out_dir/LuckySpeeder.dylib fishhook.c mach_excServer.c hwbphook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
@@ -79,7 +79,7 @@ for target in "$@"; do
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
-            -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            -o $out_dir/LuckySpeeder.dylib fishhook.c mach_excServer.c hwbphook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
             -flto
         strip -x $out_dir/LuckySpeeder.dylib
