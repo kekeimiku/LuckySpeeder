@@ -27,63 +27,7 @@ SOFTWARE.
 
 #import "LuckySpeederView.h"
 #import "LuckySpeeder.h"
-
-static const float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
-                                    1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
-                                    2.1, 2.2,  2.3, 2.4,  2.5, 5.0, 10.0};
-static const int speedValuesCount = sizeof(speedValues) / sizeof(float);
-static int currentIndex = 5;
-static float currentValue = 1.0;
-
-enum SpeedMode { Heart, Spade, Club, Diamond };
-static enum SpeedMode currentMod = Heart;
-
-static void updateSpeed(float value) {
-  switch (currentMod) {
-  case Heart:
-    set_timeScale(value);
-    return;
-  case Spade:
-    set_gettimeofday(value);
-    return;
-  case Club:
-    set_clock_gettime(value);
-    return;
-  case Diamond:
-    set_mach_absolute_time(value);
-    return;
-  }
-}
-
-static int initHook(void) {
-  switch (currentMod) {
-  case Heart:
-    return hook_timeScale();
-  case Spade:
-    return hook_gettimeofday();
-  case Club:
-    return hook_clock_gettime();
-  case Diamond:
-    return hook_mach_absolute_time();
-  }
-}
-
-static void resetHook(void) {
-  switch (currentMod) {
-  case Heart:
-    reset_timeScale();
-    return;
-  case Spade:
-    reset_gettimeofday();
-    return;
-  case Club:
-    reset_clock_gettime();
-    return;
-  case Diamond:
-    reset_mach_absolute_time();
-    return;
-  }
-}
+#import "LuckySpeederWrap.h"
 
 @interface LuckySpeederView ()
 

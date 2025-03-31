@@ -25,7 +25,7 @@ Inject [LuckySpeeder.dylib](https://github.com/kekeimiku/LuckySpeeder/releases) 
 
 Google Search: [How to inject dylib into ipa](https://www.google.com/search?q=How+to+inject+dylib+into+ipa)
 
-PS: You can work without injecting tools like CydiaSubstrate or Substitute.
+PS: If you can use [TrollStore](https://github.com/opa334/TrollStore), [TrollFools](https://github.com/Lessica/TrollFools) is a great choice.
 
 ## Tested Games
 
@@ -43,12 +43,12 @@ PS: You can work without injecting tools like CydiaSubstrate or Substitute.
 
 And more...
 
-## FAQ
+## Platform Support
 
-### Why does changing the speed have no effect in some games?
+Since v0.0.6, I can no longer test on versions lower than iOS 15.
 
-1. If possible, try turning off VSync in your game.
+VisionOS and tvOS are currently experimental.
 
-2. The game’s anti-cheat system might be preventing this.
+## Disclaimer
 
-3. The game uses a special timer, which LuckySpeeder currently cannot handle.
+Use this program at your own risk.
