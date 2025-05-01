@@ -19,7 +19,6 @@ for target in "$@"; do
         mkdir -p $out_dir
 
         $clang -dynamiclib \
-            -x objective-c \
             -target arm64-apple-ios13.1 \
             -isysroot $sdk_dir \
             -framework Foundation \
@@ -37,10 +36,8 @@ for target in "$@"; do
         mkdir -p $out_dir
 
         $clang -dynamiclib \
-            -x objective-c \
             -target arm64-apple-ios13.1-macabi \
             -isysroot $sdk_dir \
-            -isystem $sdk_dir/System/iOSSupport/usr/include \
             -iframework $sdk_dir/System/iOSSupport/System/Library/Frameworks \
             -framework Foundation \
             -framework UIKit \
@@ -57,7 +54,6 @@ for target in "$@"; do
         mkdir -p $out_dir
 
         $clang -dynamiclib \
-            -x objective-c \
             -target arm64-apple-xros1.0 \
             -isysroot $sdk_dir \
             -framework Foundation \
@@ -75,7 +71,6 @@ for target in "$@"; do
         mkdir -p $out_dir
 
         $clang -dynamiclib \
-            -x objective-c \
             -target arm64-apple-tvos13.2 \
             -isysroot $sdk_dir \
             -framework Foundation \
