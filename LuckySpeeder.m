@@ -123,8 +123,7 @@ static void resetHook() {
 
   CGFloat initialH;
 
-  UIDevice *device = [UIDevice currentDevice];
-  UIUserInterfaceIdiom idiom = device.userInterfaceIdiom;
+  UIUserInterfaceIdiom idiom = [UIDevice currentDevice].userInterfaceIdiom;
   if (idiom == UIUserInterfaceIdiomPhone) {
     initialH = 34;
   } else if (idiom == UIUserInterfaceIdiomPad) {
@@ -273,20 +272,21 @@ static void resetHook() {
                      : self.frame.origin.x + 4 * buttonWidth;
 
   [UIView animateWithDuration:0.4
-                   animations:^{
-                     self.frame = CGRectMake(newX, self.frame.origin.y,
-                                             buttonWidth, buttonWidth);
-                     self.alpha = 0.5;
-                     self.layer.cornerRadius = buttonWidth / 2;
-                   }];
-
-  self.button1.hidden = YES;
-  self.button2.hidden = YES;
-  self.button3.hidden = YES;
-  self.button4.hidden = YES;
-  self.button5.hidden = YES;
-  self.button6.frame = self.bounds;
-  self.button6.hidden = NO;
+      animations:^{
+        self.frame =
+            CGRectMake(newX, self.frame.origin.y, buttonWidth, buttonWidth);
+        self.alpha = 0.5;
+        self.layer.cornerRadius = buttonWidth / 2;
+      }
+      completion:^(BOOL finished) {
+        self.button1.hidden = YES;
+        self.button2.hidden = YES;
+        self.button3.hidden = YES;
+        self.button4.hidden = YES;
+        self.button5.hidden = YES;
+        self.button6.frame = self.bounds;
+        self.button6.hidden = NO;
+      }];
 }
 
 - (void)Button1Changed {
@@ -440,21 +440,21 @@ static void resetHook() {
                      ? self.frame.origin.x
                      : self.frame.origin.x - 4 * buttonWidth;
 
+  self.button1.hidden = NO;
+  self.button2.hidden = NO;
+  self.button3.hidden = NO;
+  self.button4.hidden = NO;
+  self.button5.hidden = NO;
+  self.button6.hidden = YES;
+
   [UIView animateWithDuration:0.4
-      animations:^{
-        self.frame = CGRectMake(newX, self.frame.origin.y, expandedWidth,
-                                self.frame.size.height);
-        self.alpha = 1.0;
-        self.layer.cornerRadius = buttonWidth / 2;
-      }
-      completion:^(BOOL finished) {
-        self.button1.hidden = NO;
-        self.button2.hidden = NO;
-        self.button3.hidden = NO;
-        self.button4.hidden = NO;
-        self.button5.hidden = NO;
-        self.button6.hidden = YES;
-      }];
+                   animations:^{
+                     self.frame =
+                         CGRectMake(newX, self.frame.origin.y, expandedWidth,
+                                    self.frame.size.height);
+                     self.alpha = 1.0;
+                     self.layer.cornerRadius = buttonWidth / 2;
+                   }];
 
   [self resetIdleTimer];
 }
