@@ -27,6 +27,7 @@ SOFTWARE.
 
 #import "LuckySpeeder.h"
 #import <UIKit/UIKit.h>
+#import <objc/runtime.h>
 
 static const float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
                                     1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
@@ -85,7 +86,9 @@ static void resetHook() {
   }
 }
 
-@interface LuckySpeederView : UIView
+extern UIApplication *UIApp;
+
+@interface LuckySpeederView : UIButton
 
 @property(nonatomic, assign) CGPoint lastLocation;
 @property(nonatomic, assign) CGFloat windowWidth;
@@ -103,20 +106,23 @@ static void resetHook() {
 
 @implementation LuckySpeederView
 
-+ (id)sharedInstance {
-  static UIView *ui;
-  static dispatch_once_t token;
-  dispatch_once(&token, ^{
-    ui = [[self alloc] init];
++ (LuckySpeederView *)sharedInstance {
+  static LuckySpeederView *instance;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    instance = [[self alloc] init];
   });
-
-  return ui;
+  return instance;
 }
 
 - (instancetype)init {
 
-  UIWindowScene *windowScene = (UIWindowScene *)
-      [[UIApplication sharedApplication].connectedScenes anyObject];
+  /*
+  TODO:
+  It is probably not a good idea to rely on the size of the first window.
+  */
+  UIWindowScene *windowScene =
+      (UIWindowScene *)[UIApp.connectedScenes anyObject];
   CGSize windowSize = windowScene.windows.firstObject.bounds.size;
   self.windowWidth = windowSize.width;
   self.windowHeight = windowSize.height;
@@ -389,8 +395,14 @@ static void resetHook() {
   [alertController addAction:confirmAction];
   [alertController addAction:cancelAction];
 
-  UIWindowScene *windowScene = (UIWindowScene *)
-      [[UIApplication sharedApplication].connectedScenes anyObject];
+  /*
+  TODO:
+  If the app has multiple windows, the alert will be displayed in the wrong
+  window, and if the alert is not dismissed, it will cause the LuckySpeederView
+  UI to freeze.
+  */
+  UIWindowScene *windowScene =
+      (UIWindowScene *)[UIApp.connectedScenes anyObject];
   UIViewController *controller =
       windowScene.windows.firstObject.rootViewController;
   [controller presentViewController:alertController
@@ -461,23 +473,102 @@ static void resetHook() {
 
 @end
 
-static void didFinishLaunching(CFNotificationCenterRef center, void *observer,
-                               CFStringRef name, const void *object,
-                               CFDictionaryRef info) {
-  dispatch_after(
-      dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
-      dispatch_get_main_queue(), ^{
-        UIWindowScene *windowScene = (UIWindowScene *)
-            [[UIApplication sharedApplication].connectedScenes anyObject];
-        UIViewController *controller =
-            windowScene.windows.firstObject.rootViewController;
-        [controller.view addSubview:LuckySpeederView.sharedInstance];
-      });
+static UIButton *luckyspeederview;
+
+static void (*original_bringSubviewToFront)(UIWindow *self, SEL _cmd,
+                                            UIView *view);
+static void (*original_addSubview)(UIWindow *self, SEL _cmd, UIView *view);
+
+static void swizzled_bringSubviewToFront(UIWindow *self, SEL _cmd,
+                                         UIView *view) {
+  original_bringSubviewToFront(self, _cmd, view);
+  if (luckyspeederview && view != luckyspeederview) {
+    [self bringSubviewToFront:luckyspeederview];
+  }
+}
+
+static void swizzled_addSubview(UIWindow *self, SEL _cmd, UIView *view) {
+  original_addSubview(self, _cmd, view);
+  if (luckyspeederview && view != luckyspeederview) {
+    [self bringSubviewToFront:luckyspeederview];
+  }
+}
+
+static void swizzleMethod(Class class, SEL originalSelector,
+                          SEL swizzledSelector, IMP swizzledImplementation,
+                          IMP *originalImplementation) {
+  Method originalMethod = class_getInstanceMethod(class, originalSelector);
+  Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+
+  if (class_addMethod(class, originalSelector, swizzledImplementation,
+                      method_getTypeEncoding(swizzledMethod))) {
+    class_replaceMethod(class, swizzledSelector,
+                        method_getImplementation(originalMethod),
+                        method_getTypeEncoding(originalMethod));
+  } else {
+    method_exchangeImplementations(originalMethod, swizzledMethod);
+  }
+  *originalImplementation = method_getImplementation(originalMethod);
+}
+
+static void injectLuckySpeederView(void) {
+  Class windowClass = objc_getClass("UIWindow");
+  swizzleMethod(windowClass, @selector(bringSubviewToFront:),
+                @selector(swizzled_bringSubviewToFront:),
+                (IMP)swizzled_bringSubviewToFront,
+                (IMP *)&original_bringSubviewToFront);
+
+  swizzleMethod(windowClass, @selector(addSubview:),
+                @selector(swizzled_addSubview:), (IMP)swizzled_addSubview,
+                (IMP *)&original_addSubview);
+
+  if (![[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
+    Class scenesClass = [[UIApp connectedScenes] class];
+    class_addMethod(
+        scenesClass, @selector(window), (IMP) ^ (id self) { return nil; },
+        "@@:");
+  }
+
+  luckyspeederview = [LuckySpeederView sharedInstance];
+
+  if (!luckyspeederview.superview &&
+      [[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
+
+    UIWindow *keyWindow = nil;
+    for (UIScene *scene in UIApp.connectedScenes) {
+      if ([scene isKindOfClass:[UIWindowScene class]]) {
+        UIWindowScene *windowScene = (UIWindowScene *)scene;
+        for (UIWindow *window in windowScene.windows) {
+          if (window.isKeyWindow) {
+            keyWindow = window;
+            break;
+          }
+        }
+      }
+      if (keyWindow) {
+        break;
+      }
+    }
+
+    [keyWindow addSubview:luckyspeederview];
+    [keyWindow bringSubviewToFront:luckyspeederview];
+  }
+}
+
+static void UIApplicationDidFinishLaunching(CFNotificationCenterRef center,
+                                            void *observer, CFStringRef name,
+                                            const void *object,
+                                            CFDictionaryRef userInfo) {
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
+                 dispatch_get_main_queue(), ^{
+                   injectLuckySpeederView();
+                 });
 }
 
 __attribute__((constructor)) static void initialize(void) {
   CFNotificationCenterAddObserver(
-      CFNotificationCenterGetLocalCenter(), NULL, &didFinishLaunching,
+      CFNotificationCenterGetLocalCenter(), NULL,
+      UIApplicationDidFinishLaunching,
       (CFStringRef)UIApplicationDidFinishLaunchingNotification, NULL,
-      CFNotificationSuspensionBehaviorDeliverImmediately);
+      CFNotificationSuspensionBehaviorCoalesce);
 }
