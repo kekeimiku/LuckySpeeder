@@ -56,7 +56,7 @@ static void updateSpeed(float value) {
   }
 }
 
-static int initHook() {
+static int initHook(void) {
   switch (currentMod) {
   case Heart:
     return hook_timeScale();
@@ -69,7 +69,7 @@ static int initHook() {
   }
 }
 
-static void resetHook() {
+static void resetHook(void) {
   switch (currentMod) {
   case Heart:
     reset_timeScale();
@@ -116,7 +116,6 @@ extern UIApplication *UIApp;
 }
 
 - (instancetype)init {
-
   /*
   TODO:
   It is probably not a good idea to rely on the size of the first window.
@@ -475,6 +474,11 @@ extern UIApplication *UIApp;
 
 static UIButton *luckyspeederview;
 
+@interface UIWindow (LuckySpeeder)
+- (void)swizzled_bringSubviewToFront:(UIView *)view;
+- (void)swizzled_addSubview:(UIView *)view;
+@end
+
 static void (*original_bringSubviewToFront)(UIWindow *self, SEL _cmd,
                                             UIView *view);
 static void (*original_addSubview)(UIWindow *self, SEL _cmd, UIView *view);
@@ -511,6 +515,8 @@ static void swizzleMethod(Class class, SEL originalSelector,
   *originalImplementation = method_getImplementation(originalMethod);
 }
 
+static id scenesWindowIMP(id self, SEL _cmd) { return nil; }
+
 static void injectLuckySpeederView(void) {
   Class windowClass = objc_getClass("UIWindow");
   swizzleMethod(windowClass, @selector(bringSubviewToFront:),
@@ -524,16 +530,14 @@ static void injectLuckySpeederView(void) {
 
   if (![[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
     Class scenesClass = [[UIApp connectedScenes] class];
-    class_addMethod(
-        scenesClass, @selector(window), (IMP) ^ (id self) { return nil; },
-        "@@:");
+    class_addMethod(scenesClass, @selector(window), (IMP)scenesWindowIMP,
+                    "@@:");
   }
 
   luckyspeederview = [LuckySpeederView sharedInstance];
 
   if (!luckyspeederview.superview &&
       [[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
-
     UIWindow *keyWindow = nil;
     for (UIScene *scene in UIApp.connectedScenes) {
       if ([scene isKindOfClass:[UIWindowScene class]]) {

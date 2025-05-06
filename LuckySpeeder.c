@@ -169,13 +169,11 @@ static float gettimeofday_speed = 1.0;
 static float clock_gettime_speed = 1.0;
 static float mach_absolute_time_speed = 1.0;
 
-static time_t pre_sec;
-static suseconds_t pre_usec;
-static time_t true_pre_sec;
-static suseconds_t true_pre_usec;
-
-#define USec_Scale (1000000LL)
-#define NSec_Scale (1000000000LL)
+#define USec_Scale (1000000)
+static time_t gettimeofday_pre_sec;
+static suseconds_t gettimeofday_pre_usec;
+static time_t gettimeofday_true_pre_sec;
+static suseconds_t gettimeofday_true_pre_usec;
 
 static int (*real_gettimeofday)(struct timeval *, void *) = NULL;
 
@@ -183,29 +181,31 @@ static int (*real_gettimeofday)(struct timeval *, void *) = NULL;
 static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
   int ret = real_gettimeofday(tv, tz);
   if (!ret) {
-    if (!pre_sec) {
-      pre_sec = tv->tv_sec;
-      true_pre_sec = tv->tv_sec;
-      pre_usec = tv->tv_usec;
-      true_pre_usec = tv->tv_usec;
+    if (!gettimeofday_pre_sec) {
+      gettimeofday_pre_sec = tv->tv_sec;
+      gettimeofday_true_pre_sec = tv->tv_sec;
+      gettimeofday_pre_usec = tv->tv_usec;
+      gettimeofday_true_pre_usec = tv->tv_usec;
     } else {
       int64_t true_curSec = tv->tv_sec * USec_Scale + tv->tv_usec;
-      int64_t true_preSec = true_pre_sec * USec_Scale + true_pre_usec;
+      int64_t true_preSec =
+          gettimeofday_true_pre_sec * USec_Scale + gettimeofday_true_pre_usec;
       int64_t invl = true_curSec - true_preSec;
       invl *= gettimeofday_speed;
 
-      int64_t curSec = pre_sec * USec_Scale + pre_usec;
+      int64_t curSec =
+          gettimeofday_pre_sec * USec_Scale + gettimeofday_pre_usec;
       curSec += invl;
 
       time_t used_sec = curSec / USec_Scale;
       suseconds_t used_usec = curSec % USec_Scale;
 
-      true_pre_sec = tv->tv_sec;
-      true_pre_usec = tv->tv_usec;
+      gettimeofday_true_pre_sec = tv->tv_sec;
+      gettimeofday_true_pre_usec = tv->tv_usec;
       tv->tv_sec = used_sec;
       tv->tv_usec = used_usec;
-      pre_sec = used_sec;
-      pre_usec = used_usec;
+      gettimeofday_pre_sec = used_sec;
+      gettimeofday_pre_usec = used_usec;
     }
   }
   return ret;
@@ -227,33 +227,41 @@ void set_gettimeofday(float value) { gettimeofday_speed = value; }
 static int (*real_clock_gettime)(clockid_t clock_id,
                                  struct timespec *tp) = NULL;
 
+#define NSec_Scale (1000000000)
+static time_t clock_gettime_pre_sec;
+static long clock_gettime_pre_nsec;
+static time_t clock_gettime_true_pre_sec;
+static long clock_gettime_true_pre_nsec;
+
 // my_clock_gettime fix from AccDemo
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
   int ret = real_clock_gettime(clk_id, tp);
   if (!ret) {
-    if (!pre_sec) {
-      pre_sec = tp->tv_sec;
-      true_pre_sec = tp->tv_sec;
-      pre_usec = tp->tv_nsec;
-      true_pre_usec = tp->tv_nsec;
+    if (!clock_gettime_pre_sec) {
+      clock_gettime_pre_sec = tp->tv_sec;
+      clock_gettime_true_pre_sec = tp->tv_sec;
+      clock_gettime_pre_nsec = tp->tv_nsec;
+      clock_gettime_true_pre_nsec = tp->tv_nsec;
     } else {
       int64_t true_curSec = tp->tv_sec * NSec_Scale + tp->tv_nsec;
-      int64_t true_preSec = true_pre_sec * NSec_Scale + true_pre_usec;
+      int64_t true_preSec =
+          clock_gettime_true_pre_sec * NSec_Scale + clock_gettime_true_pre_nsec;
       int64_t invl = true_curSec - true_preSec;
       invl *= clock_gettime_speed;
 
-      int64_t curSec = pre_sec * NSec_Scale + pre_usec;
+      int64_t curSec =
+          clock_gettime_pre_sec * NSec_Scale + clock_gettime_pre_nsec;
       curSec += invl;
 
       time_t used_sec = curSec / NSec_Scale;
-      suseconds_t used_usec = curSec % NSec_Scale;
+      long used_nsec = curSec % NSec_Scale;
 
-      true_pre_sec = tp->tv_sec;
-      true_pre_usec = tp->tv_nsec;
+      clock_gettime_true_pre_sec = tp->tv_sec;
+      clock_gettime_true_pre_nsec = tp->tv_nsec;
       tp->tv_sec = used_sec;
-      tp->tv_nsec = used_usec;
-      pre_sec = used_sec;
-      pre_usec = used_usec;
+      tp->tv_nsec = used_nsec;
+      clock_gettime_pre_sec = used_sec;
+      clock_gettime_pre_nsec = used_nsec;
     }
   }
   return ret;
