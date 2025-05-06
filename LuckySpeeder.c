@@ -37,15 +37,13 @@ static float timeScale_speed = 1.0;
 static void (*real_timeScale)(float) = NULL;
 
 static void my_timeScale(void) {
-  if (real_timeScale) {
+  if (real_timeScale)
     real_timeScale(timeScale_speed);
-  }
 }
 
 int hook_timeScale(void) {
-  if (real_timeScale) {
+  if (real_timeScale)
     return 0;
-  }
 
   intptr_t unity_vmaddr_slide = 0;
   uint32_t image_count = _dyld_image_count();
@@ -92,9 +90,9 @@ int hook_timeScale(void) {
     if ((first_instruction & 0x9F000000) == 0x90000000 &&
         (second_instruction & 0xFF800000) == 0x91000000) {
       resolved_address = (il2cpp_section_base & 0xFFFFFFFFFFFFF000LL) +
-                         (int32_t)((((first_instruction >> 3) & 0xFFFFFFFC) |
-                                    ((first_instruction >> 29) & 3))
-                                   << 12);
+                         (uint32_t)((((first_instruction >> 3) & 0xFFFFFFFC) |
+                                     ((first_instruction >> 29) & 3))
+                                    << 12);
       function_offset = (second_instruction >> 10) & 0xFFF;
       if ((second_instruction & 0xC00000) != 0)
         function_offset <<= 12;
@@ -117,9 +115,9 @@ int hook_timeScale(void) {
   } while ((current_instruction & 0x9F000000) != 0x90000000);
 
   code_section_address = (current_address & 0xFFFFFFFFFFFFF000LL) +
-                         (int32_t)((((current_instruction >> 3) & 0xFFFFFFFC) |
-                                    ((current_instruction >> 29) & 3))
-                                   << 12);
+                         (uint32_t)((((current_instruction >> 3) & 0xFFFFFFFC) |
+                                     ((current_instruction >> 29) & 3))
+                                    << 12);
 
   uintptr_t method_data = *(uint32_t *)(current_address + 4);
   uintptr_t function_data_offset;
@@ -212,12 +210,12 @@ static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
 }
 
 int hook_gettimeofday(void) {
-  if (real_gettimeofday) {
+  if (real_gettimeofday)
     return 0;
-  }
-  return rebind_symbols((struct rebinding[1]){{"gettimeofday", my_gettimeofday,
-                                               (void *)&real_gettimeofday}},
-                        1);
+
+  struct rebinding rebindings = {"gettimeofday", my_gettimeofday,
+                                 (void *)&real_gettimeofday};
+  return rebind_symbols(&rebindings, 1);
 }
 
 void reset_gettimeofday(void) { gettimeofday_speed = 1.0; }
@@ -268,14 +266,12 @@ static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
 }
 
 int hook_clock_gettime(void) {
-  if (real_clock_gettime) {
+  if (real_clock_gettime)
     return 0;
-  }
 
-  return rebind_symbols(
-      (struct rebinding[1]){
-          {"clock_gettime", my_clock_gettime, (void *)&real_clock_gettime}},
-      1);
+  struct rebinding rebindings = {"clock_gettime", my_clock_gettime,
+                                 (void *)&real_clock_gettime};
+  return rebind_symbols(&rebindings, 1);
 }
 
 void reset_clock_gettime(void) { clock_gettime_speed = 1.0; }
@@ -311,13 +307,12 @@ static uint64_t my_mach_absolute_time(void) {
 }
 
 int hook_mach_absolute_time(void) {
-  if (real_mach_absolute_time) {
+  if (real_mach_absolute_time)
     return 0;
-  }
-  return rebind_symbols(
-      (struct rebinding[1]){{"mach_absolute_time", my_mach_absolute_time,
-                             (void *)&real_mach_absolute_time}},
-      1);
+
+  struct rebinding rebindings = {"mach_absolute_time", my_mach_absolute_time,
+                                 (void *)&real_mach_absolute_time};
+  return rebind_symbols(&rebindings, 1);
 }
 
 void reset_mach_absolute_time(void) { mach_absolute_time_speed = 1.0; }

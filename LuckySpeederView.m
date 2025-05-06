@@ -25,16 +25,15 @@ SOFTWARE.
 
 */
 
+#import "LuckySpeederView.h"
 #import "LuckySpeeder.h"
-#import <UIKit/UIKit.h>
-#import <objc/runtime.h>
 
 static const float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
                                     1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
                                     2.1, 2.2,  2.3, 2.4,  2.5, 5.0, 10.0};
+static const int speedValuesCount = sizeof(speedValues) / sizeof(float);
 static int currentIndex = 5;
 static float currentValue = 1.0;
-static const int speedValuesCount = sizeof(speedValues) / sizeof(float);
 
 enum SpeedMode { Heart, Spade, Club, Diamond };
 static enum SpeedMode currentMod = Heart;
@@ -86,9 +85,7 @@ static void resetHook(void) {
   }
 }
 
-extern UIApplication *UIApp;
-
-@interface LuckySpeederView : UIButton
+@interface LuckySpeederView ()
 
 @property(nonatomic, assign) CGPoint lastLocation;
 @property(nonatomic, assign) CGFloat windowWidth;
@@ -267,31 +264,32 @@ extern UIApplication *UIApp;
 }
 
 - (void)hideSpeedView {
-  if (!self.button6.hidden) {
+  if (!self.button6.hidden)
     return;
-  }
 
   CGFloat buttonWidth = self.bounds.size.height;
   CGFloat newX = self.center.x < self.windowWidth / 2
                      ? self.frame.origin.x
                      : self.frame.origin.x + 4 * buttonWidth;
 
-  [UIView animateWithDuration:0.4
-      animations:^{
-        self.frame =
-            CGRectMake(newX, self.frame.origin.y, buttonWidth, buttonWidth);
-        self.alpha = 0.5;
-        self.layer.cornerRadius = buttonWidth / 2;
-      }
-      completion:^(BOOL finished) {
-        self.button1.hidden = YES;
-        self.button2.hidden = YES;
-        self.button3.hidden = YES;
-        self.button4.hidden = YES;
-        self.button5.hidden = YES;
-        self.button6.frame = self.bounds;
-        self.button6.hidden = NO;
-      }];
+  void (^animations)(void) = ^{
+    self.frame =
+        CGRectMake(newX, self.frame.origin.y, buttonWidth, buttonWidth);
+    self.alpha = 0.5;
+    self.layer.cornerRadius = buttonWidth / 2;
+  };
+
+  void (^completion)(BOOL) = ^(BOOL finished) {
+    self.button1.hidden = YES;
+    self.button2.hidden = YES;
+    self.button3.hidden = YES;
+    self.button4.hidden = YES;
+    self.button5.hidden = YES;
+    self.button6.frame = self.bounds;
+    self.button6.hidden = NO;
+  };
+
+  [UIView animateWithDuration:0.4 animations:animations completion:completion];
 }
 
 - (void)Button1Changed {
@@ -338,9 +336,8 @@ extern UIApplication *UIApp;
   if (currentIndex > 0) {
     currentIndex--;
     currentValue = speedValues[currentIndex];
-    if (self.button5.isSelected) {
+    if (self.button5.isSelected)
       updateSpeed(currentValue);
-    }
   }
   [self.button3 setTitle:[@(currentValue) stringValue]
                 forState:UIControlStateNormal];
@@ -372,9 +369,8 @@ extern UIApplication *UIApp;
                 CGFloat inputValue = [inputText floatValue];
                 if (inputValue >= 0.1 && inputValue <= 999) {
                   currentValue = inputValue;
-                  if (self.button5.isSelected) {
+                  if (self.button5.isSelected)
                     updateSpeed(currentValue);
-                  }
                   [self.button3
                       setTitle:[NSString stringWithFormat:@"%.2f", currentValue]
                       forState:UIControlStateNormal];
@@ -413,9 +409,8 @@ extern UIApplication *UIApp;
   if (currentIndex < speedValuesCount - 1) {
     currentIndex++;
     currentValue = speedValues[currentIndex];
-    if (self.button5.isSelected) {
+    if (self.button5.isSelected)
       updateSpeed(currentValue);
-    }
   }
   [self.button3 setTitle:[@(currentValue) stringValue]
                 forState:UIControlStateNormal];
@@ -458,121 +453,16 @@ extern UIApplication *UIApp;
   self.button5.hidden = NO;
   self.button6.hidden = YES;
 
-  [UIView animateWithDuration:0.4
-                   animations:^{
-                     self.frame =
-                         CGRectMake(newX, self.frame.origin.y, expandedWidth,
-                                    self.frame.size.height);
-                     self.alpha = 1.0;
-                     self.layer.cornerRadius = buttonWidth / 2;
-                   }];
+  void (^animations)(void) = ^{
+    self.frame = CGRectMake(newX, self.frame.origin.y, expandedWidth,
+                            self.frame.size.height);
+    self.alpha = 1.0;
+    self.layer.cornerRadius = buttonWidth / 2;
+  };
+
+  [UIView animateWithDuration:0.4 animations:animations];
 
   [self resetIdleTimer];
 }
 
 @end
-
-static UIButton *luckyspeederview;
-
-@interface UIWindow (LuckySpeeder)
-- (void)swizzled_bringSubviewToFront:(UIView *)view;
-- (void)swizzled_addSubview:(UIView *)view;
-@end
-
-static void (*original_bringSubviewToFront)(UIWindow *self, SEL _cmd,
-                                            UIView *view);
-static void (*original_addSubview)(UIWindow *self, SEL _cmd, UIView *view);
-
-static void swizzled_bringSubviewToFront(UIWindow *self, SEL _cmd,
-                                         UIView *view) {
-  original_bringSubviewToFront(self, _cmd, view);
-  if (luckyspeederview && view != luckyspeederview) {
-    [self bringSubviewToFront:luckyspeederview];
-  }
-}
-
-static void swizzled_addSubview(UIWindow *self, SEL _cmd, UIView *view) {
-  original_addSubview(self, _cmd, view);
-  if (luckyspeederview && view != luckyspeederview) {
-    [self bringSubviewToFront:luckyspeederview];
-  }
-}
-
-static void swizzleMethod(Class class, SEL originalSelector,
-                          SEL swizzledSelector, IMP swizzledImplementation,
-                          IMP *originalImplementation) {
-  Method originalMethod = class_getInstanceMethod(class, originalSelector);
-  Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
-
-  if (class_addMethod(class, originalSelector, swizzledImplementation,
-                      method_getTypeEncoding(swizzledMethod))) {
-    class_replaceMethod(class, swizzledSelector,
-                        method_getImplementation(originalMethod),
-                        method_getTypeEncoding(originalMethod));
-  } else {
-    method_exchangeImplementations(originalMethod, swizzledMethod);
-  }
-  *originalImplementation = method_getImplementation(originalMethod);
-}
-
-static id scenesWindowIMP(id self, SEL _cmd) { return nil; }
-
-static void injectLuckySpeederView(void) {
-  Class windowClass = objc_getClass("UIWindow");
-  swizzleMethod(windowClass, @selector(bringSubviewToFront:),
-                @selector(swizzled_bringSubviewToFront:),
-                (IMP)swizzled_bringSubviewToFront,
-                (IMP *)&original_bringSubviewToFront);
-
-  swizzleMethod(windowClass, @selector(addSubview:),
-                @selector(swizzled_addSubview:), (IMP)swizzled_addSubview,
-                (IMP *)&original_addSubview);
-
-  if (![[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
-    Class scenesClass = [[UIApp connectedScenes] class];
-    class_addMethod(scenesClass, @selector(window), (IMP)scenesWindowIMP,
-                    "@@:");
-  }
-
-  luckyspeederview = [LuckySpeederView sharedInstance];
-
-  if (!luckyspeederview.superview &&
-      [[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
-    UIWindow *keyWindow = nil;
-    for (UIScene *scene in UIApp.connectedScenes) {
-      if ([scene isKindOfClass:[UIWindowScene class]]) {
-        UIWindowScene *windowScene = (UIWindowScene *)scene;
-        for (UIWindow *window in windowScene.windows) {
-          if (window.isKeyWindow) {
-            keyWindow = window;
-            break;
-          }
-        }
-      }
-      if (keyWindow) {
-        break;
-      }
-    }
-
-    [keyWindow addSubview:luckyspeederview];
-    [keyWindow bringSubviewToFront:luckyspeederview];
-  }
-}
-
-static void UIApplicationDidFinishLaunching(CFNotificationCenterRef center,
-                                            void *observer, CFStringRef name,
-                                            const void *object,
-                                            CFDictionaryRef userInfo) {
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
-                 dispatch_get_main_queue(), ^{
-                   injectLuckySpeederView();
-                 });
-}
-
-__attribute__((constructor)) static void initialize(void) {
-  CFNotificationCenterAddObserver(
-      CFNotificationCenterGetLocalCenter(), NULL,
-      UIApplicationDidFinishLaunching,
-      (CFStringRef)UIApplicationDidFinishLaunchingNotification, NULL,
-      CFNotificationSuspensionBehaviorCoalesce);
-}

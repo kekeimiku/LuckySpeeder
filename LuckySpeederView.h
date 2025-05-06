@@ -25,39 +25,12 @@ SOFTWARE.
 
 */
 
-#ifndef LuckySpeeder_H
-#define LuckySpeeder_H
+#import <UIKit/UIKit.h>
 
-#if !defined(LuckySpeeder_EXPORT)
-#define LuckySpeeder_VISIBILITY __attribute__((visibility("hidden")))
-#else
-#define LuckySpeeder_VISIBILITY __attribute__((visibility("default")))
-#endif
+extern UIApplication *UIApp;
 
-#define HOOK_SUCCESS 0
+@interface LuckySpeederView : UIView
 
-LuckySpeeder_VISIBILITY int hook_timeScale(void);
++ (LuckySpeederView *)sharedInstance;
 
-LuckySpeeder_VISIBILITY void set_timeScale(float value);
-
-LuckySpeeder_VISIBILITY void reset_timeScale(void);
-
-LuckySpeeder_VISIBILITY int hook_gettimeofday(void);
-
-LuckySpeeder_VISIBILITY void reset_gettimeofday(void);
-
-LuckySpeeder_VISIBILITY void set_gettimeofday(float value);
-
-LuckySpeeder_VISIBILITY int hook_clock_gettime(void);
-
-LuckySpeeder_VISIBILITY void reset_clock_gettime(void);
-
-LuckySpeeder_VISIBILITY void set_clock_gettime(float value);
-
-LuckySpeeder_VISIBILITY int hook_mach_absolute_time(void);
-
-LuckySpeeder_VISIBILITY void reset_mach_absolute_time(void);
-
-LuckySpeeder_VISIBILITY void set_mach_absolute_time(float value);
-
-#endif // LuckySpeeder_H
+@end
