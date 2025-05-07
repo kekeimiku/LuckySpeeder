@@ -235,12 +235,6 @@ static long clock_gettime_true_pre_nsec;
 static int (*real_clock_gettime)(clockid_t clock_id,
                                  struct timespec *tp) = NULL;
 
-#define NSec_Scale (1000000000)
-static time_t clock_gettime_pre_sec;
-static long clock_gettime_pre_nsec;
-static time_t clock_gettime_true_pre_sec;
-static long clock_gettime_true_pre_nsec;
-
 // https://github.com/macports/macports-legacy-support/blob/master/src/time.c
 // https://github.com/apple-oss-distributions/Libc/blob/main/gen/clock_gettime.c
 #define BILLION32 1000000000U
