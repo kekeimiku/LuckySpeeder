@@ -249,6 +249,7 @@ SOFTWARE.
     self.button5.hidden = YES;
     self.button6.frame = self.bounds;
     self.button6.hidden = NO;
+    [self resetIdleTimer];
   };
 
   [UIView animateWithDuration:0.4 animations:animations completion:completion];
@@ -383,7 +384,11 @@ SOFTWARE.
     self.layer.cornerRadius = buttonWidth / 2;
   };
 
-  [UIView animateWithDuration:0.4 animations:animations];
+  void (^completion)(BOOL) = ^(BOOL finished) {
+    [self resetIdleTimer];
+  };
+
+  [UIView animateWithDuration:0.4 animations:animations completion:completion];
 
   [self resetIdleTimer];
   self.userInteractionEnabled = YES;
