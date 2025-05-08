@@ -28,6 +28,7 @@ SOFTWARE.
 #import "LuckySpeederView.h"
 #import <objc/runtime.h>
 
+extern UIApplication *UIApp;
 static LuckySpeederView *luckyspeederview;
 
 @interface UIWindow (LuckySpeeder)
@@ -88,25 +89,29 @@ static void injectLuckySpeederView(void) {
                     "@@:");
   }
 
-  luckyspeederview = [LuckySpeederView sharedInstance];
+  UIWindow *keyWindow = nil;
+  for (UIScene *scene in UIApp.connectedScenes) {
+    if ([scene isKindOfClass:[UIWindowScene class]]) {
+      UIWindowScene *windowScene = (UIWindowScene *)scene;
+      for (UIWindow *window in windowScene.windows) {
+        if (window.isKeyWindow) {
+          keyWindow = window;
+          break;
+        }
+      }
+    }
+    if (keyWindow)
+      break;
+  }
+
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    luckyspeederview =
+        [[LuckySpeederView alloc] initWithSize:keyWindow.bounds.size];
+  });
 
   if (!luckyspeederview.superview &&
       [[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
-    UIWindow *keyWindow = nil;
-    for (UIScene *scene in UIApp.connectedScenes) {
-      if ([scene isKindOfClass:[UIWindowScene class]]) {
-        UIWindowScene *windowScene = (UIWindowScene *)scene;
-        for (UIWindow *window in windowScene.windows) {
-          if (window.isKeyWindow) {
-            keyWindow = window;
-            break;
-          }
-        }
-      }
-      if (keyWindow)
-        break;
-    }
-
     [keyWindow addSubview:luckyspeederview];
     [keyWindow bringSubviewToFront:luckyspeederview];
   }

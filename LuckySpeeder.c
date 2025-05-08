@@ -27,14 +27,10 @@ SOFTWARE.
 
 #include "LuckySpeeder.h"
 #include "fishhook.h"
-#include "hwbphook.h"
-#include <dlfcn.h>
 #include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#include <stdlib.h>
-#include <sys/sysctl.h>
+#include <string.h>
+#include <sys/time.h>
 
 static float timeScale_speed = 1.0;
 
@@ -235,73 +231,9 @@ static long clock_gettime_true_pre_nsec;
 static int (*real_clock_gettime)(clockid_t clock_id,
                                  struct timespec *tp) = NULL;
 
-// https://github.com/macports/macports-legacy-support/blob/master/src/time.c
-// https://github.com/apple-oss-distributions/Libc/blob/main/gen/clock_gettime.c
-#define BILLION32 1000000000U
-static inline int port_clock_gettime(clockid_t clk_id, struct timespec *ts) {
-  int ret = -1;
-  if (ts) {
-    if (CLOCK_REALTIME == clk_id) {
-      struct timeval tv;
-      ret = gettimeofday(&tv, NULL);
-      ts->tv_sec = tv.tv_sec;
-      ts->tv_nsec = tv.tv_usec * 1000;
-    } else if (CLOCK_MONOTONIC == clk_id) {
-      struct timeval boottime;
-      size_t boottime_len = sizeof(boottime);
-      int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
-      u_int bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
-      ret = sysctl(bt_mib, bt_miblen, &boottime, &boottime_len, NULL, 0);
-      if (ret != KERN_SUCCESS) {
-        return ret;
-      }
-      struct timeval tv;
-      ret = gettimeofday(&tv, NULL);
-      timersub(&tv, &boottime, &tv);
-      ts->tv_sec = tv.tv_sec;
-      ts->tv_nsec = tv.tv_usec * 1000;
-      ret = 0;
-    } else if (CLOCK_PROCESS_CPUTIME_ID == clk_id) {
-      struct rusage ru;
-      ret = getrusage(RUSAGE_SELF, &ru);
-      timeradd(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
-      ts->tv_sec = ru.ru_utime.tv_sec;
-      ts->tv_nsec = ru.ru_utime.tv_usec * 1000;
-    } else if (CLOCK_THREAD_CPUTIME_ID == clk_id) {
-      mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
-      thread_basic_info_data_t info;
-
-      thread_port_t thread = mach_thread_self();
-      ret =
-          thread_info(thread, THREAD_BASIC_INFO, (thread_info_t)&info, &count);
-      mach_port_deallocate(mach_task_self(), thread);
-
-      time_value_add(&info.user_time, &info.system_time);
-      ts->tv_sec = info.user_time.seconds;
-      ts->tv_nsec = info.user_time.microseconds * 1000;
-    } else if (CLOCK_MONOTONIC_RAW == clk_id ||
-               CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
-               CLOCK_UPTIME_RAW == clk_id ||
-               CLOCK_UPTIME_RAW_APPROX == clk_id) {
-      static mach_timebase_info_data_t timebase;
-      if (0 == timebase.numer || 0 == timebase.denom) {
-        const kern_return_t kr = mach_timebase_info(&timebase);
-        if (kr != KERN_SUCCESS) {
-          return kr;
-        }
-      }
-      uint64_t tdiff = mach_absolute_time() * (timebase.numer / timebase.denom);
-      ts->tv_sec = tdiff / BILLION32;
-      ts->tv_nsec = tdiff % BILLION32;
-      ret = 0;
-    }
-  }
-  return ret;
-}
-
 // my_clock_gettime fix from AccDemo
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
-  int ret = port_clock_gettime(clk_id, tp);
+  int ret = real_clock_gettime(clk_id, tp);
   if (!ret) {
     if (!clock_gettime_pre_sec) {
       clock_gettime_pre_sec = tp->tv_sec;
@@ -337,16 +269,9 @@ int hook_clock_gettime(void) {
   if (real_clock_gettime)
     return 0;
 
-  void *libSystem = dlopen("/usr/lib/libSystem.dylib", RTLD_NOLOAD);
-  real_clock_gettime = dlsym(libSystem, "clock_gettime");
-
-  bool success = hwbp_rebind(real_clock_gettime, my_clock_gettime);
-  if (!success) {
-    real_clock_gettime = NULL;
-    return -1;
-  }
-
-  return 0;
+  struct rebinding rebindings = {"clock_gettime", my_clock_gettime,
+                                 (void *)&real_clock_gettime};
+  return rebind_symbols(&rebindings, 1);
 }
 
 void reset_clock_gettime(void) { clock_gettime_speed = 1.0; }

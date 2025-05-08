@@ -32,14 +32,15 @@ SOFTWARE.
 @interface LuckySpeederView ()
 
 @property(nonatomic, assign) CGPoint lastLocation;
-@property(nonatomic, assign) CGFloat windowWidth;
-@property(nonatomic, assign) CGFloat windowHeight;
 @property(nonatomic, strong) UIButton *button1;
 @property(nonatomic, strong) UIButton *button2;
 @property(nonatomic, strong) UIButton *button3;
 @property(nonatomic, strong) UIButton *button4;
 @property(nonatomic, strong) UIButton *button5;
 @property(nonatomic, strong) UIButton *button6;
+@property(nonatomic, strong) UIButton *button7;
+@property(nonatomic, strong) UIButton *button8;
+@property(nonatomic, strong) UITextField *textField;
 @property(nonatomic, strong) NSTimer *idleTimer;
 @property(nonatomic, strong) UIImageSymbolConfiguration *symbolConfiguration;
 
@@ -47,28 +48,8 @@ SOFTWARE.
 
 @implementation LuckySpeederView
 
-+ (LuckySpeederView *)sharedInstance {
-  static LuckySpeederView *instance;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    instance = [[self alloc] init];
-  });
-  return instance;
-}
-
-- (instancetype)init {
-  /*
-  TODO:
-  It is probably not a good idea to rely on the size of the first window.
-  */
-  UIWindowScene *windowScene =
-      (UIWindowScene *)[UIApp.connectedScenes anyObject];
-  CGSize windowSize = windowScene.windows.firstObject.bounds.size;
-  self.windowWidth = windowSize.width;
-  self.windowHeight = windowSize.height;
-
+- (LuckySpeederView *)initWithSize:(CGSize)size {
   CGFloat initialH;
-
   UIUserInterfaceIdiom idiom = [UIDevice currentDevice].userInterfaceIdiom;
   if (idiom == UIUserInterfaceIdiomPhone) {
     initialH = 34;
@@ -79,8 +60,8 @@ SOFTWARE.
   }
 
   CGFloat initialW = initialH * 5;
-  CGFloat initialX = self.windowWidth - initialH * 5 - 20;
-  CGFloat initialY = self.windowHeight / 5;
+  CGFloat initialX = size.width - initialH * 5 - 20;
+  CGFloat initialY = size.height / 5;
 
   self =
       [super initWithFrame:CGRectMake(initialX, initialY, initialW, initialH)];
@@ -150,15 +131,52 @@ SOFTWARE.
          forControlEvents:UIControlEventTouchUpInside];
   [self addSubview:self.button5];
 
+  UIImageSymbolConfiguration *symbolConfiguration = [UIImageSymbolConfiguration
+      configurationWithPointSize:fontSize
+                          weight:UIImageSymbolWeightBold];
+
   self.button6 = [UIButton buttonWithType:UIButtonTypeCustom];
-  [self.button6 setImage:[UIImage systemImageNamed:@"clock.fill"
-                                 withConfiguration:self.symbolConfiguration]
+  [self.button6 setImage:[UIImage systemImageNamed:@"gear"
+                                 withConfiguration:symbolConfiguration]
                 forState:UIControlStateNormal];
   self.button6.hidden = YES;
   [self.button6 addTarget:self
                    action:@selector(Button6Changed)
          forControlEvents:UIControlEventTouchUpInside];
   [self addSubview:self.button6];
+
+  self.button7 = [UIButton buttonWithType:UIButtonTypeCustom];
+  self.button7.hidden = YES;
+  self.button7.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
+  [self.button7 setImage:[UIImage systemImageNamed:@"xmark"
+                                 withConfiguration:symbolConfiguration]
+                forState:UIControlStateNormal];
+  [self.button7 addTarget:self
+                   action:@selector(Button7Changed)
+         forControlEvents:UIControlEventTouchUpInside];
+  [self addSubview:self.button7];
+
+  self.button8 = [UIButton buttonWithType:UIButtonTypeCustom];
+  self.button8.hidden = YES;
+  self.button8.frame = CGRectMake(4 * buttonWidth, 0, buttonWidth, buttonWidth);
+  [self.button8 setImage:[UIImage systemImageNamed:@"checkmark"
+                                 withConfiguration:symbolConfiguration]
+                forState:UIControlStateNormal];
+  [self.button8 addTarget:self
+                   action:@selector(Button8Changed)
+         forControlEvents:UIControlEventTouchUpInside];
+  [self addSubview:self.button8];
+
+  self.textField = [[UITextField alloc]
+      initWithFrame:CGRectMake(buttonWidth, 0, buttonWidth * 3, buttonWidth)];
+  self.textField.hidden = YES;
+  self.textField.placeholder = @"0.1~999";
+  self.textField.textAlignment = NSTextAlignmentCenter;
+  self.textField.backgroundColor = self.backgroundColor;
+  self.textField.textColor = self.tintColor;
+  self.textField.borderStyle = UITextBorderStyleNone;
+  self.textField.font = [UIFont systemFontOfSize:fontSize];
+  [self addSubview:self.textField];
 
   UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc]
       initWithTarget:self
@@ -208,11 +226,11 @@ SOFTWARE.
 }
 
 - (void)hideSpeedView {
-  if (!self.button6.hidden)
+  if (!self.button6.hidden || !self.textField.hidden)
     return;
 
   CGFloat buttonWidth = self.bounds.size.height;
-  CGFloat newX = self.center.x < self.windowWidth / 2
+  CGFloat newX = self.center.x < self.superview.bounds.size.width / 2
                      ? self.frame.origin.x
                      : self.frame.origin.x + 4 * buttonWidth;
 
@@ -277,6 +295,7 @@ SOFTWARE.
 }
 
 - (void)Button2Changed {
+  self.userInteractionEnabled = NO;
   if (currentIndex > 0) {
     currentIndex--;
     currentValue = speedValues[currentIndex];
@@ -286,70 +305,28 @@ SOFTWARE.
   [self.button3 setTitle:[@(currentValue) stringValue]
                 forState:UIControlStateNormal];
   [self resetIdleTimer];
+  self.userInteractionEnabled = YES;
 }
 
 - (void)Button3Changed {
   self.userInteractionEnabled = NO;
   [self.idleTimer invalidate];
 
-  UIAlertController *alertController = [UIAlertController
-      alertControllerWithTitle:@"Custom Speed"
-                       message:@"Open Source: "
-                               @"\nhttps://github.com/kekeimiku/LuckySpeeder"
-                preferredStyle:UIAlertControllerStyleAlert];
+  self.button1.hidden = YES;
+  self.button2.hidden = YES;
+  self.button3.hidden = YES;
+  self.button4.hidden = YES;
+  self.button5.hidden = YES;
+  self.button7.hidden = NO;
+  self.button8.hidden = NO;
+  self.textField.hidden = NO;
+  [self.textField becomeFirstResponder];
 
-  [alertController
-      addTextFieldWithConfigurationHandler:^(UITextField *_Nonnull textField) {
-        textField.placeholder = @"0.1~999";
-        textField.keyboardType = UIKeyboardTypeDecimalPad;
-      }];
-
-  UIAlertAction *confirmAction = [UIAlertAction
-      actionWithTitle:@"OK"
-                style:UIAlertActionStyleDefault
-              handler:^(UIAlertAction *_Nonnull action) {
-                NSString *inputText =
-                    alertController.textFields.firstObject.text;
-                CGFloat inputValue = [inputText floatValue];
-                if (inputValue >= 0.1 && inputValue <= 999) {
-                  currentValue = inputValue;
-                  if (self.button5.isSelected)
-                    updateSpeed(currentValue);
-                  [self.button3
-                      setTitle:[NSString stringWithFormat:@"%.2f", currentValue]
-                      forState:UIControlStateNormal];
-                }
-                self.userInteractionEnabled = YES;
-                [self resetIdleTimer];
-              }];
-
-  UIAlertAction *cancelAction =
-      [UIAlertAction actionWithTitle:@"Cancel"
-                               style:UIAlertActionStyleDefault
-                             handler:^(UIAlertAction *_Nonnull action) {
-                               self.userInteractionEnabled = YES;
-                               [self resetIdleTimer];
-                             }];
-
-  [alertController addAction:confirmAction];
-  [alertController addAction:cancelAction];
-
-  /*
-  TODO:
-  If the app has multiple windows, the alert will be displayed in the wrong
-  window, and if the alert is not dismissed, it will cause the LuckySpeederView
-  UI to freeze.
-  */
-  UIWindowScene *windowScene =
-      (UIWindowScene *)[UIApp.connectedScenes anyObject];
-  UIViewController *controller =
-      windowScene.windows.firstObject.rootViewController;
-  [controller presentViewController:alertController
-                           animated:YES
-                         completion:nil];
+  self.userInteractionEnabled = YES;
 }
 
 - (void)Button4Changed {
+  self.userInteractionEnabled = NO;
   if (currentIndex < speedValuesCount - 1) {
     currentIndex++;
     currentValue = speedValues[currentIndex];
@@ -359,6 +336,7 @@ SOFTWARE.
   [self.button3 setTitle:[@(currentValue) stringValue]
                 forState:UIControlStateNormal];
   [self resetIdleTimer];
+  self.userInteractionEnabled = YES;
 }
 
 - (void)Button5Changed {
@@ -384,9 +362,10 @@ SOFTWARE.
 }
 
 - (void)Button6Changed {
+  self.userInteractionEnabled = NO;
   CGFloat buttonWidth = self.frame.size.width;
   CGFloat expandedWidth = buttonWidth * 5;
-  CGFloat newX = self.center.x < self.windowWidth / 2
+  CGFloat newX = self.center.x < self.superview.bounds.size.width / 2
                      ? self.frame.origin.x
                      : self.frame.origin.x - 4 * buttonWidth;
 
@@ -407,6 +386,49 @@ SOFTWARE.
   [UIView animateWithDuration:0.4 animations:animations];
 
   [self resetIdleTimer];
+  self.userInteractionEnabled = YES;
+}
+
+- (void)Button7Changed {
+  self.userInteractionEnabled = NO;
+  [self.textField resignFirstResponder];
+  self.button7.hidden = YES;
+  self.button8.hidden = YES;
+  self.textField.hidden = YES;
+  self.button1.hidden = NO;
+  self.button2.hidden = NO;
+  self.button3.hidden = NO;
+  self.button4.hidden = NO;
+  self.button5.hidden = NO;
+  [self resetIdleTimer];
+  self.userInteractionEnabled = YES;
+}
+
+- (void)Button8Changed {
+  self.userInteractionEnabled = NO;
+  float inputValue = [self.textField.text floatValue];
+  if (inputValue >= 0.1 && inputValue <= 999) {
+    currentValue = inputValue;
+    [self.button3 setTitle:[NSString stringWithFormat:@"%.2f", currentValue]
+                  forState:UIControlStateNormal];
+    if (self.button5.isSelected) {
+      updateSpeed(currentValue);
+    }
+  }
+
+  [self.textField resignFirstResponder];
+
+  self.button7.hidden = YES;
+  self.button8.hidden = YES;
+  self.textField.hidden = YES;
+  self.button1.hidden = NO;
+  self.button2.hidden = NO;
+  self.button3.hidden = NO;
+  self.button4.hidden = NO;
+  self.button5.hidden = NO;
+
+  [self resetIdleTimer];
+  self.userInteractionEnabled = YES;
 }
 
 @end
