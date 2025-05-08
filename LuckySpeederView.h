@@ -27,10 +27,8 @@ SOFTWARE.
 
 #import <UIKit/UIKit.h>
 
-extern UIApplication *UIApp;
-
 @interface LuckySpeederView : UIView
 
-+ (LuckySpeederView *)sharedInstance;
+- (LuckySpeederView *)initWithSize:(CGSize)size;
 
 @end
