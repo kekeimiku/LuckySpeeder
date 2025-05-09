@@ -17,7 +17,7 @@ Click ▶ ⏸ to start or stop.
 
 ## Demo Video
 
-https://github.com/user-attachments/assets/a2b7b4c2-d7c7-47e8-83b7-be36b3328502
+https://github.com/user-attachments/assets/9f8aca31-a61f-4c03-b4a3-5e77066e8483
 
 ## How to use
 
