@@ -40,14 +40,13 @@ static void (*original_bringSubviewToFront)(UIWindow *self, SEL _cmd,
                                             UIView *view);
 static void (*original_addSubview)(UIWindow *self, SEL _cmd, UIView *view);
 
-static void swizzled_bringSubviewToFront(UIWindow *self, SEL _cmd,
-                                         UIView *view) {
+static void my_bringSubviewToFront(UIWindow *self, SEL _cmd, UIView *view) {
   original_bringSubviewToFront(self, _cmd, view);
   if (luckyspeederview && view != luckyspeederview)
     [self bringSubviewToFront:luckyspeederview];
 }
 
-static void swizzled_addSubview(UIWindow *self, SEL _cmd, UIView *view) {
+static void my_addSubview(UIWindow *self, SEL _cmd, UIView *view) {
   original_addSubview(self, _cmd, view);
   if (luckyspeederview && view != luckyspeederview)
     [self bringSubviewToFront:luckyspeederview];
@@ -76,11 +75,11 @@ static void injectLuckySpeederView(void) {
   Class windowClass = objc_getClass("UIWindow");
   swizzleMethod(windowClass, @selector(bringSubviewToFront:),
                 @selector(swizzled_bringSubviewToFront:),
-                (IMP)swizzled_bringSubviewToFront,
+                (IMP)my_bringSubviewToFront,
                 (IMP *)&original_bringSubviewToFront);
 
   swizzleMethod(windowClass, @selector(addSubview:),
-                @selector(swizzled_addSubview:), (IMP)swizzled_addSubview,
+                @selector(swizzled_addSubview:), (IMP)my_addSubview,
                 (IMP *)&original_addSubview);
 
   if (![[UIApp connectedScenes] respondsToSelector:@selector(window)]) {

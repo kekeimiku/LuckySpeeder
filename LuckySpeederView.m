@@ -80,7 +80,7 @@ SOFTWARE.
 
   self.button1 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button1.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
-  [self.button1 setImage:[UIImage systemImageNamed:@"suit.heart.fill"
+  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbol[currentMod])
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
   self.button1.titleLabel.font = [UIFont systemFontOfSize:fontSize];
@@ -266,27 +266,9 @@ SOFTWARE.
     self.button5.selected = NO;
   }
 
-  NSString *stateSymbol = @"";
-  switch (currentMod) {
-  case Heart:
-    stateSymbol = @"suit.spade.fill";
-    currentMod = Spade;
-    break;
-  case Spade:
-    stateSymbol = @"suit.club.fill";
-    currentMod = Club;
-    break;
-  case Club:
-    stateSymbol = @"suit.diamond.fill";
-    currentMod = Diamond;
-    break;
-  case Diamond:
-    stateSymbol = @"suit.heart.fill";
-    currentMod = Heart;
-    break;
-  }
+  currentMod = (currentMod + 1) % 5;
 
-  [self.button1 setImage:[UIImage systemImageNamed:stateSymbol
+  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbol[currentMod])
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
 

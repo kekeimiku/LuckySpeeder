@@ -34,15 +34,15 @@ SOFTWARE.
 
 static float timeScale_speed = 1.0;
 
-static void (*real_timeScale)(float) = NULL;
+static void (*original_timeScale)(float) = NULL;
 
 static void my_timeScale(void) {
-  if (real_timeScale)
-    real_timeScale(timeScale_speed);
+  if (original_timeScale)
+    original_timeScale(timeScale_speed);
 }
 
 int hook_timeScale(void) {
-  if (real_timeScale)
+  if (original_timeScale)
     return 0;
 
   intptr_t unity_vmaddr_slide = 0;
@@ -128,7 +128,7 @@ int hook_timeScale(void) {
     function_data_offset = (method_data >> 10) & 0xFFF;
 
   if (*(uintptr_t *)(code_section_address + function_data_offset)) {
-    real_timeScale =
+    original_timeScale =
         *(void (**)(float))(function_data_offset + code_section_address);
   } else {
     uint32_t instruction_operand = *(uint32_t *)(il2cpp_section_base + 8);
@@ -142,12 +142,12 @@ int hook_timeScale(void) {
     else
       function_offset = instruction_offset;
 
-    real_timeScale = (void (*)(float))((uintptr_t(*)(void *)) &
-                                       code_section_start[function_offset])(
+    original_timeScale = (void (*)(float))((uintptr_t(*)(void *)) &
+                                           code_section_start[function_offset])(
         time_scale_function_address);
   }
 
-  if (real_timeScale) {
+  if (original_timeScale) {
     *(uintptr_t *)(function_data_offset + code_section_address) =
         (uintptr_t)my_timeScale;
     return 0;
@@ -173,11 +173,11 @@ static suseconds_t gettimeofday_pre_usec;
 static time_t gettimeofday_true_pre_sec;
 static suseconds_t gettimeofday_true_pre_usec;
 
-static int (*real_gettimeofday)(struct timeval *, void *) = NULL;
+static int (*original_gettimeofday)(struct timeval *, void *) = NULL;
 
 // my_gettimeofday fix from AccDemo
 static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
-  int ret = real_gettimeofday(tv, tz);
+  int ret = original_gettimeofday(tv, tz);
   if (!ret) {
     if (!gettimeofday_pre_sec) {
       gettimeofday_pre_sec = tv->tv_sec;
@@ -210,11 +210,11 @@ static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
 }
 
 int hook_gettimeofday(void) {
-  if (real_gettimeofday)
+  if (original_gettimeofday)
     return 0;
 
   struct rebinding rebindings = {"gettimeofday", my_gettimeofday,
-                                 (void *)&real_gettimeofday};
+                                 (void *)&original_gettimeofday};
   return rebind_symbols(&rebindings, 1);
 }
 
@@ -228,12 +228,12 @@ static long clock_gettime_pre_nsec;
 static time_t clock_gettime_true_pre_sec;
 static long clock_gettime_true_pre_nsec;
 
-static int (*real_clock_gettime)(clockid_t clock_id,
-                                 struct timespec *tp) = NULL;
+static int (*original_clock_gettime)(clockid_t clock_id,
+                                     struct timespec *tp) = NULL;
 
 // my_clock_gettime fix from AccDemo
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
-  int ret = real_clock_gettime(clk_id, tp);
+  int ret = original_clock_gettime(clk_id, tp);
   if (!ret) {
     if (!clock_gettime_pre_sec) {
       clock_gettime_pre_sec = tp->tv_sec;
@@ -266,11 +266,11 @@ static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
 }
 
 int hook_clock_gettime(void) {
-  if (real_clock_gettime)
+  if (original_clock_gettime)
     return 0;
 
   struct rebinding rebindings = {"clock_gettime", my_clock_gettime,
-                                 (void *)&real_clock_gettime};
+                                 (void *)&original_clock_gettime};
   return rebind_symbols(&rebindings, 1);
 }
 
@@ -278,7 +278,7 @@ void reset_clock_gettime(void) { clock_gettime_speed = 1.0; }
 
 void set_clock_gettime(float value) { clock_gettime_speed = value; }
 
-static uint64_t (*real_mach_absolute_time)(void) = NULL;
+static uint64_t (*original_mach_absolute_time)(void) = NULL;
 
 static bool init_mach_absolute_time;
 static uint64_t mach_absolute_base_time;
@@ -287,7 +287,7 @@ static uint64_t mach_absolute_last_time;
 
 static uint64_t my_mach_absolute_time(void) {
   uint64_t result;
-  uint64_t current_time = real_mach_absolute_time();
+  uint64_t current_time = original_mach_absolute_time();
 
   if (!init_mach_absolute_time) {
     init_mach_absolute_time = true;
@@ -307,11 +307,11 @@ static uint64_t my_mach_absolute_time(void) {
 }
 
 int hook_mach_absolute_time(void) {
-  if (real_mach_absolute_time)
+  if (original_mach_absolute_time)
     return 0;
 
   struct rebinding rebindings = {"mach_absolute_time", my_mach_absolute_time,
-                                 (void *)&real_mach_absolute_time};
+                                 (void *)&original_mach_absolute_time};
   return rebind_symbols(&rebindings, 1);
 }
 

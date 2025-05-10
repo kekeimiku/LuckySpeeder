@@ -43,7 +43,10 @@ const int speedValuesCount = sizeof(speedValues) / sizeof(float);
 int currentIndex = 5;
 float currentValue = 1.0;
 
-enum SpeedMode { Heart, Spade, Club, Diamond };
+enum SpeedMode { Heart, Spade, Club, Diamond, Star };
+const char *modeSymbol[] = {"suit.heart.fill", "suit.spade.fill",
+                            "suit.club.fill", "suit.diamond.fill", "star.fill"};
+
 enum SpeedMode currentMod = Heart;
 
 LuckySpeederWrap_VISIBILITY void updateSpeed(float value);
@@ -64,6 +67,8 @@ int initHook(void) {
     return hook_clock_gettime();
   case Diamond:
     return hook_mach_absolute_time();
+  case Star:
+    return hook_SKScene_update();
   }
 }
 
@@ -81,6 +86,9 @@ void resetHook(void) {
   case Diamond:
     reset_mach_absolute_time();
     return;
+  case Star:
+    reset_SKScene_update();
+    return;
   }
 }
 
@@ -97,6 +105,9 @@ void updateSpeed(float value) {
     return;
   case Diamond:
     set_mach_absolute_time(value);
+    return;
+  case Star:
+    set_SKScene_update(value);
     return;
   }
 }

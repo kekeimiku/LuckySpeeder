@@ -60,4 +60,10 @@ LuckySpeeder_VISIBILITY void reset_mach_absolute_time(void);
 
 LuckySpeeder_VISIBILITY void set_mach_absolute_time(float value);
 
+LuckySpeeder_VISIBILITY int hook_SKScene_update(void);
+
+LuckySpeeder_VISIBILITY void reset_SKScene_update(void);
+
+LuckySpeeder_VISIBILITY void set_SKScene_update(float value);
+
 #endif // LuckySpeeder_H
