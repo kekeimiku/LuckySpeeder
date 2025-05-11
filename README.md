@@ -5,15 +5,19 @@
 
 ## What's this
 
-Hacking Applications: Four modes are available for controlling Game speed.
+Hacking Applications: A Universal Game Speed Controller
 
-It is not guaranteed to work for all programs; some luck may be required.
+Click Heart, Spade, Club, Diamond, Star to switch modes. 
 
-Click ♥️ ♠️ ♣️ ♦️ to switch mode.
+Click Forward, Backward to adjust the speed.
 
-Click ◀◀ or ▶▶ to adjust speed.
+Click the number to customize the speed.
 
-Click ▶ ⏸ to start or stop.
+Click Play, Pause to start or stop the speed change.
+
+If that doesn't work, try another mode.
+
+NOTE: Not all programs will work - you may need some luck.
 
 ## Demo Video
 
