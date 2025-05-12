@@ -80,7 +80,7 @@ SOFTWARE.
 
   self.button1 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button1.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
-  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbol[currentMod])
+  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbols[currentMod])
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
   self.button1.titleLabel.font = [UIFont systemFontOfSize:fontSize];
@@ -101,7 +101,7 @@ SOFTWARE.
 
   self.button3 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button3.frame = CGRectMake(2 * buttonWidth, 0, buttonWidth, buttonWidth);
-  [self.button3 setTitle:[@(currentValue) stringValue]
+  [self.button3 setTitle:[@(speedValue) stringValue]
                 forState:UIControlStateNormal];
   self.button3.titleLabel.font = [UIFont systemFontOfSize:fontSize];
   self.button3.titleLabel.adjustsFontSizeToFitWidth = YES;
@@ -266,9 +266,9 @@ SOFTWARE.
     self.button5.selected = NO;
   }
 
-  currentMod = (currentMod + 1) % 5;
+  currentMod = (currentMod + 1) % modeSymbolsCount;
 
-  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbol[currentMod])
+  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbols[currentMod])
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
 
@@ -279,13 +279,13 @@ SOFTWARE.
 
 - (void)Button2Changed {
   self.userInteractionEnabled = NO;
-  if (currentIndex > 0) {
-    currentIndex--;
-    currentValue = speedValues[currentIndex];
+  if (speedValuesIndex > 0) {
+    speedValuesIndex--;
+    speedValue = speedValues[speedValuesIndex];
     if (self.button5.isSelected)
-      updateSpeed(currentValue);
+      updateSpeed(speedValue);
   }
-  [self.button3 setTitle:[@(currentValue) stringValue]
+  [self.button3 setTitle:[@(speedValue) stringValue]
                 forState:UIControlStateNormal];
   [self resetIdleTimer];
   self.userInteractionEnabled = YES;
@@ -310,13 +310,13 @@ SOFTWARE.
 
 - (void)Button4Changed {
   self.userInteractionEnabled = NO;
-  if (currentIndex < speedValuesCount - 1) {
-    currentIndex++;
-    currentValue = speedValues[currentIndex];
+  if (speedValuesIndex < speedValuesCount - 1) {
+    speedValuesIndex++;
+    speedValue = speedValues[speedValuesIndex];
     if (self.button5.isSelected)
-      updateSpeed(currentValue);
+      updateSpeed(speedValue);
   }
-  [self.button3 setTitle:[@(currentValue) stringValue]
+  [self.button3 setTitle:[@(speedValue) stringValue]
                 forState:UIControlStateNormal];
   [self resetIdleTimer];
   self.userInteractionEnabled = YES;
@@ -332,7 +332,7 @@ SOFTWARE.
                   forState:UIControlStateNormal];
   } else {
     initHook();
-    updateSpeed(currentValue);
+    updateSpeed(speedValue);
     [self.button5 setImage:[UIImage systemImageNamed:@"pause.fill"
                                    withConfiguration:self.symbolConfiguration]
                   forState:UIControlStateNormal];
@@ -395,11 +395,11 @@ SOFTWARE.
   self.userInteractionEnabled = NO;
   float inputValue = [self.textField.text floatValue];
   if (inputValue >= 0.1 && inputValue <= 999) {
-    currentValue = inputValue;
-    [self.button3 setTitle:[NSString stringWithFormat:@"%.2f", currentValue]
+    speedValue = inputValue;
+    [self.button3 setTitle:[NSString stringWithFormat:@"%.2f", speedValue]
                   forState:UIControlStateNormal];
     if (self.button5.isSelected) {
-      updateSpeed(currentValue);
+      updateSpeed(speedValue);
     }
   }
 

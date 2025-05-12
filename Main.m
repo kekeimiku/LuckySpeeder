@@ -37,8 +37,9 @@ static LuckySpeederView *luckyspeederview;
 @end
 
 static void (*original_bringSubviewToFront)(UIWindow *self, SEL _cmd,
-                                            UIView *view);
-static void (*original_addSubview)(UIWindow *self, SEL _cmd, UIView *view);
+                                            UIView *view) = NULL;
+static void (*original_addSubview)(UIWindow *self, SEL _cmd,
+                                   UIView *view) = NULL;
 
 static void my_bringSubviewToFront(UIWindow *self, SEL _cmd, UIView *view) {
   original_bringSubviewToFront(self, _cmd, view);

@@ -36,18 +36,20 @@ SOFTWARE.
 #define LuckySpeederWrap_VISIBILITY __attribute__((visibility("default")))
 #endif
 
+enum SpeedMode { Heart = 0, Spade = 1, Club = 2, Diamond = 3, Star = 4 };
+enum SpeedMode currentMod = Heart;
+
+const char *modeSymbols[] = {"suit.heart.fill", "suit.spade.fill",
+                             "suit.club.fill", "suit.diamond.fill",
+                             "star.fill"};
+const int modeSymbolsCount = sizeof(modeSymbols) / sizeof(char *);
+
 const float speedValues[] = {0.1, 0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.2,
                              1.3, 1.4,  1.5, 1.6,  1.7, 1.8, 1.9, 2.0,
                              2.1, 2.2,  2.3, 2.4,  2.5, 5.0, 10.0};
 const int speedValuesCount = sizeof(speedValues) / sizeof(float);
-int currentIndex = 5;
-float currentValue = 1.0;
-
-enum SpeedMode { Heart, Spade, Club, Diamond, Star };
-const char *modeSymbol[] = {"suit.heart.fill", "suit.spade.fill",
-                            "suit.club.fill", "suit.diamond.fill", "star.fill"};
-
-enum SpeedMode currentMod = Heart;
+int speedValuesIndex = 5;
+float speedValue = 1.0;
 
 LuckySpeederWrap_VISIBILITY void updateSpeed(float value);
 
