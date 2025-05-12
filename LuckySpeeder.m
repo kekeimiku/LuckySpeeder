@@ -4,13 +4,13 @@
 
 static float SKScene_update_speed = 1.0;
 
-static void (*original_SKScene_update)(id, SEL, NSTimeInterval);
+static void (*original_SKScene_update)(id, SEL, NSTimeInterval) = NULL;
 
 static void my_SKScene_update(id self, SEL _cmd, NSTimeInterval currentTime) {
   if ([self isKindOfClass:[SKScene class]]) {
     SKScene *scene = (SKScene *)self;
     if (scene.physicsWorld) {
-      scene.physicsWorld.speed = 1.0 * SKScene_update_speed;
+      scene.physicsWorld.speed = SKScene_update_speed;
       [scene enumerateChildNodesWithName:@"//*"
                               usingBlock:^(SKNode *node, BOOL *stop) {
                                 if ([node hasActions]) {
@@ -26,12 +26,10 @@ int hook_SKScene_update(void) {
     return 0;
 
   Class gameSceneClass = nil;
-  int numClasses;
-  Class *classes = NULL;
-  numClasses = objc_getClassList(NULL, 0);
+  int numClasses = objc_getClassList(NULL, 0);
 
   if (numClasses > 0) {
-    classes = (__unsafe_unretained Class *)malloc(sizeof(Class) * numClasses);
+    Class *classes = malloc(sizeof(Class) * numClasses);
     numClasses = objc_getClassList(classes, numClasses);
     for (int i = 0; i < numClasses; i++) {
       Class class = classes[i];
@@ -45,6 +43,7 @@ int hook_SKScene_update(void) {
     }
     free(classes);
   }
+
   if (gameSceneClass) {
     Method updateMethod =
         class_getInstanceMethod(gameSceneClass, @selector(update:));

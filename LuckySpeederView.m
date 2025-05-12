@@ -80,7 +80,7 @@ SOFTWARE.
 
   self.button1 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button1.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
-  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbol[currentMod])
+  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbols[currentMod])
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
   self.button1.titleLabel.font = [UIFont systemFontOfSize:fontSize];
@@ -266,9 +266,9 @@ SOFTWARE.
     self.button5.selected = NO;
   }
 
-  currentMod = (currentMod + 1) % 5;
+  currentMod = (currentMod + 1) % modeSymbolsCount;
 
-  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbol[currentMod])
+  [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbols[currentMod])
                                  withConfiguration:self.symbolConfiguration]
                 forState:UIControlStateNormal];
 
