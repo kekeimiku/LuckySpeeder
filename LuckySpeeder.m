@@ -10,7 +10,7 @@ static void my_SKScene_update(id self, SEL _cmd, NSTimeInterval currentTime) {
   if ([self isKindOfClass:[SKScene class]]) {
     SKScene *scene = (SKScene *)self;
     if (scene.physicsWorld) {
-      scene.physicsWorld.speed = 1.0 * SKScene_update_speed;
+      scene.physicsWorld.speed = SKScene_update_speed;
       [scene enumerateChildNodesWithName:@"//*"
                               usingBlock:^(SKNode *node, BOOL *stop) {
                                 if ([node hasActions]) {
@@ -45,6 +45,7 @@ int hook_SKScene_update(void) {
     }
     free(classes);
   }
+
   if (gameSceneClass) {
     Method updateMethod =
         class_getInstanceMethod(gameSceneClass, @selector(update:));
