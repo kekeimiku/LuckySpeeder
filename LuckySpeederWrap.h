@@ -30,12 +30,6 @@ SOFTWARE.
 #ifndef LuckySpeederWrap_H
 #define LuckySpeederWrap_H
 
-#if !defined(LuckySpeederWrap_EXPORT)
-#define LuckySpeederWrap_VISIBILITY __attribute__((visibility("hidden")))
-#else
-#define LuckySpeederWrap_VISIBILITY __attribute__((visibility("default")))
-#endif
-
 enum SpeedMode { Heart = 0, Spade = 1, Club = 2, Diamond = 3, Star = 4 };
 enum SpeedMode currentMod = Heart;
 
@@ -51,11 +45,11 @@ const int speedValuesCount = sizeof(speedValues) / sizeof(float);
 int speedValuesIndex = 5;
 float speedValue = 1.0;
 
-LuckySpeederWrap_VISIBILITY void updateSpeed(float value);
+void updateSpeed(float value);
 
-LuckySpeederWrap_VISIBILITY int initHook(void);
+int initHook(void);
 
-LuckySpeederWrap_VISIBILITY void resetHook(void);
+void resetHook(void);
 
 #endif // LuckySpeederWrap_H
 

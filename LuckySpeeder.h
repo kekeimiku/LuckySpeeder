@@ -28,42 +28,36 @@ SOFTWARE.
 #ifndef LuckySpeeder_H
 #define LuckySpeeder_H
 
-#if !defined(LuckySpeeder_EXPORT)
-#define LuckySpeeder_VISIBILITY __attribute__((visibility("hidden")))
-#else
-#define LuckySpeeder_VISIBILITY __attribute__((visibility("default")))
-#endif
-
 #define HOOK_SUCCESS 0
 
-LuckySpeeder_VISIBILITY int hook_timeScale(void);
+int hook_timeScale(void);
 
-LuckySpeeder_VISIBILITY void set_timeScale(float value);
+void set_timeScale(float value);
 
-LuckySpeeder_VISIBILITY void reset_timeScale(void);
+void reset_timeScale(void);
 
-LuckySpeeder_VISIBILITY int hook_gettimeofday(void);
+int hook_gettimeofday(void);
 
-LuckySpeeder_VISIBILITY void reset_gettimeofday(void);
+void reset_gettimeofday(void);
 
-LuckySpeeder_VISIBILITY void set_gettimeofday(float value);
+void set_gettimeofday(float value);
 
-LuckySpeeder_VISIBILITY int hook_clock_gettime(void);
+int hook_clock_gettime(void);
 
-LuckySpeeder_VISIBILITY void reset_clock_gettime(void);
+void reset_clock_gettime(void);
 
-LuckySpeeder_VISIBILITY void set_clock_gettime(float value);
+void set_clock_gettime(float value);
 
-LuckySpeeder_VISIBILITY int hook_mach_absolute_time(void);
+int hook_mach_absolute_time(void);
 
-LuckySpeeder_VISIBILITY void reset_mach_absolute_time(void);
+void reset_mach_absolute_time(void);
 
-LuckySpeeder_VISIBILITY void set_mach_absolute_time(float value);
+void set_mach_absolute_time(float value);
 
-LuckySpeeder_VISIBILITY int hook_SKScene_update(void);
+int hook_SKScene_update(void);
 
-LuckySpeeder_VISIBILITY void reset_SKScene_update(void);
+void reset_SKScene_update(void);
 
-LuckySpeeder_VISIBILITY void set_SKScene_update(float value);
+void set_SKScene_update(float value);
 
 #endif // LuckySpeeder_H

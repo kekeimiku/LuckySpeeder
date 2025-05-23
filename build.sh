@@ -26,7 +26,8 @@ for target in "$@"; do
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
-            -flto
+            -flto \
+            -fvisibility=hidden
         strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-ios-macabi)
@@ -45,7 +46,8 @@ for target in "$@"; do
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
-            -flto
+            -flto \
+            -fvisibility=hidden
         strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-xros)
@@ -63,7 +65,8 @@ for target in "$@"; do
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
-            -flto
+            -flto \
+            -fvisibility=hidden
         strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-tvos)
@@ -81,7 +84,8 @@ for target in "$@"; do
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -Ofast \
-            -flto
+            -flto \
+            -fvisibility=hidden
         strip -x $out_dir/LuckySpeeder.dylib
         ;;
     *)
