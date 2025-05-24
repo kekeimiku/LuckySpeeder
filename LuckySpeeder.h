@@ -38,26 +38,26 @@ void reset_timeScale(void);
 
 int hook_gettimeofday(void);
 
-void reset_gettimeofday(void);
-
 void set_gettimeofday(float value);
+
+void reset_gettimeofday(void);
 
 int hook_clock_gettime(void);
 
-void reset_clock_gettime(void);
-
 void set_clock_gettime(float value);
+
+void reset_clock_gettime(void);
 
 int hook_mach_absolute_time(void);
 
-void reset_mach_absolute_time(void);
-
 void set_mach_absolute_time(float value);
+
+void reset_mach_absolute_time(void);
 
 int hook_SKScene_update(void);
 
-void reset_SKScene_update(void);
-
 void set_SKScene_update(float value);
+
+void reset_SKScene_update(void);
 
 #endif // LuckySpeeder_H
