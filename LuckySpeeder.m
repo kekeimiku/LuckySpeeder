@@ -59,6 +59,6 @@ int hook_SKScene_update(void) {
   return -1;
 }
 
-void reset_SKScene_update(void) { SKScene_update_speed = 1.0; }
-
 void set_SKScene_update(float value) { SKScene_update_speed = value; }
+
+void reset_SKScene_update(void) { set_SKScene_update(1.0); }
