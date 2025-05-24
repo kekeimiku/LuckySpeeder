@@ -7,7 +7,7 @@
 
 Hacking Applications: A Universal Game Speed Controller
 
-Click Heart, Spade, Club, Diamond, Star to switch modes. 
+Click Heart, Spade, Club, Diamond, Star to switch modes.
 
 Click Forward, Backward to adjust the speed.
 
@@ -21,7 +21,7 @@ NOTE: Not all programs will work - you may need some luck.
 
 ## Demo Video
 
-https://github.com/user-attachments/assets/9f8aca31-a61f-4c03-b4a3-5e77066e8483
+<https://github.com/user-attachments/assets/9f8aca31-a61f-4c03-b4a3-5e77066e8483>
 
 ## How to use
 
@@ -45,6 +45,8 @@ PS: If you can use [TrollStore](https://github.com/opa334/TrollStore), [TrollFoo
 
 [Kingdom Rush Tower Defense](https://apps.apple.com/us/app/kingdom-rush-tower-defense-td/id516378985)
 
+[Tap Titans 2 - Hero Legends](https://apps.apple.com/us/app/tap-titans-2-hero-legends/id1120294802)
+
 And more...
 
 ## Platform Support
@@ -52,6 +54,37 @@ And more...
 Since v0.0.6, I can no longer test on versions lower than iOS 15.
 
 VisionOS and tvOS are currently experimental.
+
+## Build
+
+### macOS
+
+```bash
+bash build.sh arm64-apple-ios
+```
+
+### Linux
+
+```bash
+wget https://github.com/theos/sdks/releases/download/master-146e41f/iPhoneOS16.5.sdk.tar.xz
+
+tar -xf iPhoneOS16.5.sdk.tar.xz
+
+clang -dynamiclib \
+    -target arm64-apple-ios13.1 \
+    -isysroot iPhoneOS16.5.sdk \
+    -Ofast \
+    -flto \
+    -fvisibility=hidden \
+    -fuse-ld=lld \
+    fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+    -framework Foundation \
+    -framework UIKit \
+    -framework SpriteKit \
+    -o LuckySpeeder.dylib
+
+llvm-strip -x LuckySpeeder.dylib
+```
 
 ## Disclaimer
 
