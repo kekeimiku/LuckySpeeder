@@ -29,7 +29,7 @@ SOFTWARE.
 #include "fishhook.h"
 #include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
-#include <pthread.h>
+#include <os/lock.h>
 #include <string.h>
 #include <sys/time.h>
 
@@ -171,13 +171,13 @@ static time_t gettimeofday_pre_sec = 0;
 static suseconds_t gettimeofday_pre_usec = 0;
 static time_t gettimeofday_true_pre_sec = 0;
 static suseconds_t gettimeofday_true_pre_usec = 0;
-static pthread_mutex_t gettimeofday_mutex = PTHREAD_MUTEX_INITIALIZER;
+static os_unfair_lock gettimeofday_lock = OS_UNFAIR_LOCK_INIT;
 
 static int (*original_gettimeofday)(struct timeval *, void *) = NULL;
 
 // my_gettimeofday fix from AccDemo
 static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
-  pthread_mutex_lock(&gettimeofday_mutex);
+  os_unfair_lock_lock(&gettimeofday_lock);
   int ret = original_gettimeofday(tv, tz);
   if (!ret) {
     if (!gettimeofday_pre_sec) {
@@ -207,7 +207,7 @@ static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
       gettimeofday_pre_usec = used_usec;
     }
   }
-  pthread_mutex_unlock(&gettimeofday_mutex);
+  os_unfair_lock_unlock(&gettimeofday_lock);
   return ret;
 }
 
@@ -221,9 +221,9 @@ int hook_gettimeofday(void) {
 }
 
 void set_gettimeofday(float value) {
-  pthread_mutex_lock(&gettimeofday_mutex);
+  os_unfair_lock_lock(&gettimeofday_lock);
   gettimeofday_speed = value;
-  pthread_mutex_unlock(&gettimeofday_mutex);
+  os_unfair_lock_unlock(&gettimeofday_lock);
 }
 
 void reset_gettimeofday(void) { set_gettimeofday(1.0); }
@@ -235,14 +235,14 @@ static time_t clock_gettime_pre_sec = 0;
 static long clock_gettime_pre_nsec = 0;
 static time_t clock_gettime_true_pre_sec = 0;
 static long clock_gettime_true_pre_nsec = 0;
-static pthread_mutex_t clock_gettime_mutex = PTHREAD_MUTEX_INITIALIZER;
+static os_unfair_lock clock_gettime_lock = OS_UNFAIR_LOCK_INIT;
 
 static int (*original_clock_gettime)(clockid_t clock_id,
                                      struct timespec *tp) = NULL;
 
 // my_clock_gettime fix from AccDemo
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
-  pthread_mutex_lock(&clock_gettime_mutex);
+  os_unfair_lock_lock(&clock_gettime_lock);
   int ret = original_clock_gettime(clk_id, tp);
   if (!ret) {
     if (!clock_gettime_pre_sec) {
@@ -272,7 +272,7 @@ static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
       clock_gettime_pre_nsec = used_nsec;
     }
   }
-  pthread_mutex_unlock(&clock_gettime_mutex);
+  os_unfair_lock_unlock(&clock_gettime_lock);
   return ret;
 }
 
@@ -286,9 +286,9 @@ int hook_clock_gettime(void) {
 }
 
 void set_clock_gettime(float value) {
-  pthread_mutex_lock(&clock_gettime_mutex);
+  os_unfair_lock_lock(&clock_gettime_lock);
   clock_gettime_speed = value;
-  pthread_mutex_unlock(&clock_gettime_mutex);
+  os_unfair_lock_unlock(&clock_gettime_lock);
 }
 
 void reset_clock_gettime(void) { set_clock_gettime(1.0); }
@@ -299,13 +299,12 @@ static bool init_mach_absolute_time = false;
 static uint64_t mach_absolute_base_time = 0;
 static uint64_t mach_absolute_start_time = 0;
 static uint64_t mach_absolute_last_time = 0;
-static pthread_mutex_t mach_absolute_base_time_mutex =
-    PTHREAD_MUTEX_INITIALIZER;
+static os_unfair_lock mach_absolute_base_time_lock = OS_UNFAIR_LOCK_INIT;
 
 static uint64_t (*original_mach_absolute_time)(void) = NULL;
 
 static uint64_t my_mach_absolute_time(void) {
-  pthread_mutex_lock(&mach_absolute_base_time_mutex);
+  os_unfair_lock_lock(&mach_absolute_base_time_lock);
   uint64_t current_time = original_mach_absolute_time();
   uint64_t result;
 
@@ -330,7 +329,7 @@ static uint64_t my_mach_absolute_time(void) {
     result = mach_absolute_last_time + 1;
 
   mach_absolute_last_time = result;
-  pthread_mutex_unlock(&mach_absolute_base_time_mutex);
+  os_unfair_lock_unlock(&mach_absolute_base_time_lock);
   return result;
 }
 
@@ -344,12 +343,12 @@ int hook_mach_absolute_time(void) {
 }
 
 void set_mach_absolute_time(float value) {
-  pthread_mutex_lock(&mach_absolute_base_time_mutex);
+  os_unfair_lock_lock(&mach_absolute_base_time_lock);
   uint64_t current_time = original_mach_absolute_time();
   mach_absolute_base_time = current_time;
   mach_absolute_start_time = mach_absolute_last_time;
   mach_absolute_time_speed = value;
-  pthread_mutex_unlock(&mach_absolute_base_time_mutex);
+  os_unfair_lock_unlock(&mach_absolute_base_time_lock);
 }
 
 void reset_mach_absolute_time(void) { set_mach_absolute_time(1.0); }
