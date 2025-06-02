@@ -38,6 +38,10 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 
+#if __has_include(<ptrauth.h>)
+#include <ptrauth.h>
+#endif
+
 #ifdef __LP64__
 typedef struct mach_header_64 mach_header_t;
 typedef struct segment_command_64 segment_command_t;
@@ -116,7 +120,8 @@ static int get_protection(void *addr, vm_prot_t *prot, vm_prot_t *max_prot) {
 
 static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
                                            section_t *section, intptr_t slide,
-                                           nlist_t *symtab, char *strtab,
+                                           nlist_t *symtab, int nsyms,
+                                           char *strtab,
                                            uint32_t *indirect_symtab) {
   uint32_t *indirect_symbol_indices = indirect_symtab + section->reserved1;
   void **indirect_symbol_bindings = (void **)((uintptr_t)slide + section->addr);
@@ -128,6 +133,10 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
         symtab_index == (INDIRECT_SYMBOL_LOCAL | INDIRECT_SYMBOL_ABS)) {
       continue;
     }
+    if (symtab_index >= nsyms) {
+      continue;
+    }
+
     uint32_t strtab_offset = symtab[symtab_index].n_un.n_strx;
     char *symbol_name = strtab + strtab_offset;
     bool symbol_name_longer_than_1 = symbol_name[0] && symbol_name[1];
@@ -153,13 +162,25 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
                            (uintptr_t)indirect_symbol_bindings, section->size,
                            0, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
           if (err == KERN_SUCCESS) {
-            /**
-             * Once we failed to change the vm protection, we
-             * MUST NOT continue the following write actions!
-             * iOS 15 has corrected the const segments prot.
-             * -- Lionfore Hao Jun 11th, 2021
-             **/
+/**
+ * Once we failed to change the vm protection, we
+ * MUST NOT continue the following write actions!
+ * iOS 15 has corrected the const segments prot.
+ * -- Lionfore Hao Jun 11th, 2021
+ **/
+#if !__has_feature(ptrauth_calls) && 0 // FIXME: build on Linux
             indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+#else
+            void *replacement = cur->rebindings[j].replacement;
+            if (!strcmp(section->sectname, "__auth_got")) {
+              void *stripped = ptrauth_strip(
+                  replacement, ptrauth_key_process_independent_code);
+              replacement = ptrauth_sign_unauthenticated(
+                  stripped, ptrauth_key_process_independent_code,
+                  &indirect_symbol_bindings[i]);
+            }
+            indirect_symbol_bindings[i] = replacement;
+#endif
           }
           goto symbol_loop;
         }
@@ -213,7 +234,7 @@ static void rebind_symbols_for_image(struct rebindings_entry *rebindings,
       (uint32_t *)(linkedit_base + dysymtab_cmd->indirectsymoff);
 
   cur = (uintptr_t)header + sizeof(mach_header_t);
-  for (uint i = 0; i < header->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
+  for (uint32_t i = 0; i < header->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
     cur_seg_cmd = (segment_command_t *)cur;
     if (cur_seg_cmd->cmd == LC_SEGMENT_ARCH_DEPENDENT) {
       if (strcmp(cur_seg_cmd->segname, SEG_DATA) != 0 &&
@@ -222,12 +243,13 @@ static void rebind_symbols_for_image(struct rebindings_entry *rebindings,
       }
       for (uint j = 0; j < cur_seg_cmd->nsects; j++) {
         section_t *sect = (section_t *)(cur + sizeof(segment_command_t)) + j;
+        uint32_t nsyms = symtab_cmd->nsyms;
         if ((sect->flags & SECTION_TYPE) == S_LAZY_SYMBOL_POINTERS) {
-          perform_rebinding_with_section(rebindings, sect, slide, symtab,
+          perform_rebinding_with_section(rebindings, sect, slide, symtab, nsyms,
                                          strtab, indirect_symtab);
         }
         if ((sect->flags & SECTION_TYPE) == S_NON_LAZY_SYMBOL_POINTERS) {
-          perform_rebinding_with_section(rebindings, sect, slide, symtab,
+          perform_rebinding_with_section(rebindings, sect, slide, symtab, nsyms,
                                          strtab, indirect_symtab);
         }
       }
