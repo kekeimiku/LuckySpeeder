@@ -70,10 +70,11 @@ wget https://github.com/theos/sdks/releases/download/master-146e41f/iPhoneOS16.5
 
 tar -xf iPhoneOS16.5.sdk.tar.xz
 
-clang -dynamiclib \
+clang -shared \
     -target arm64-apple-ios13.1 \
     -isysroot iPhoneOS16.5.sdk \
-    -Ofast \
+    -fobjc-arc \
+    -O3 \
     -flto \
     -fvisibility=hidden \
     -fuse-ld=lld \

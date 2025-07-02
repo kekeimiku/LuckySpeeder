@@ -29,7 +29,7 @@ int hook_SKScene_update(void) {
   int numClasses = objc_getClassList(NULL, 0);
 
   if (numClasses > 0) {
-    Class *classes = malloc(sizeof(Class) * numClasses);
+    Class *classes = (__unsafe_unretained Class *)malloc(sizeof(Class) * numClasses);
     numClasses = objc_getClassList(classes, numClasses);
     for (int i = 0; i < numClasses; i++) {
       Class class = classes[i];

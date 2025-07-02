@@ -21,6 +21,7 @@ for target in "$@"; do
         $clang -dynamiclib \
             -target arm64-apple-ios13.1 \
             -isysroot $sdk_dir \
+            -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
@@ -42,6 +43,7 @@ for target in "$@"; do
             -target arm64-apple-ios13.1-macabi \
             -isysroot $sdk_dir \
             -iframework $sdk_dir/System/iOSSupport/System/Library/Frameworks \
+            -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
@@ -62,6 +64,7 @@ for target in "$@"; do
         $clang -dynamiclib \
             -target arm64-apple-xros1.0 \
             -isysroot $sdk_dir \
+            -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
@@ -82,6 +85,7 @@ for target in "$@"; do
         $clang -dynamiclib \
             -target arm64-apple-tvos13.2 \
             -isysroot $sdk_dir \
+            -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
