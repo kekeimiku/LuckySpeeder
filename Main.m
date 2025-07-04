@@ -53,17 +53,12 @@ static void my_addSubview(UIWindow *self, SEL _cmd, UIView *view) {
     [self bringSubviewToFront:luckyspeederview];
 }
 
-static void swizzleMethod(Class class, SEL originalSelector,
-                          SEL swizzledSelector, IMP swizzledImplementation,
-                          IMP *originalImplementation) {
+static void swizzleMethod(Class class, SEL originalSelector, SEL swizzledSelector, IMP swizzledImplementation, IMP *originalImplementation) {
   Method originalMethod = class_getInstanceMethod(class, originalSelector);
   Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
 
-  if (class_addMethod(class, originalSelector, swizzledImplementation,
-                      method_getTypeEncoding(swizzledMethod))) {
-    class_replaceMethod(class, swizzledSelector,
-                        method_getImplementation(originalMethod),
-                        method_getTypeEncoding(originalMethod));
+  if (class_addMethod(class, originalSelector, swizzledImplementation, method_getTypeEncoding(swizzledMethod))) {
+    class_replaceMethod(class, swizzledSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
   } else {
     method_exchangeImplementations(originalMethod, swizzledMethod);
   }
@@ -74,19 +69,11 @@ static id scenesWindowIMP(id self, SEL _cmd) { return nil; }
 
 static void injectLuckySpeederView(void) {
   Class windowClass = objc_getClass("UIWindow");
-  swizzleMethod(windowClass, @selector(bringSubviewToFront:),
-                @selector(swizzled_bringSubviewToFront:),
-                (IMP)my_bringSubviewToFront,
-                (IMP *)&original_bringSubviewToFront);
-
-  swizzleMethod(windowClass, @selector(addSubview:),
-                @selector(swizzled_addSubview:), (IMP)my_addSubview,
-                (IMP *)&original_addSubview);
-
+  swizzleMethod(windowClass, @selector(bringSubviewToFront:), @selector(swizzled_bringSubviewToFront:), (IMP)my_bringSubviewToFront, (IMP *)&original_bringSubviewToFront);
+  swizzleMethod(windowClass, @selector(addSubview:), @selector(swizzled_addSubview:), (IMP)my_addSubview, (IMP *)&original_addSubview);
   if (![[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
     Class scenesClass = [[UIApp connectedScenes] class];
-    class_addMethod(scenesClass, @selector(window), (IMP)scenesWindowIMP,
-                    "@@:");
+    class_addMethod(scenesClass, @selector(window), (IMP)scenesWindowIMP, "@@:");
   }
 
   UIWindow *keyWindow = nil;
@@ -106,21 +93,16 @@ static void injectLuckySpeederView(void) {
 
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    luckyspeederview =
-        [[LuckySpeederView alloc] initWithSize:keyWindow.bounds.size];
+    luckyspeederview = [[LuckySpeederView alloc] initWithSize:keyWindow.bounds.size];
   });
 
-  if (!luckyspeederview.superview &&
-      [[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
+  if (!luckyspeederview.superview && [[UIApp connectedScenes] respondsToSelector:@selector(window)]) {
     [keyWindow addSubview:luckyspeederview];
     [keyWindow bringSubviewToFront:luckyspeederview];
   }
 }
 
-static void UIApplicationDidFinishLaunching(CFNotificationCenterRef center,
-                                            void *observer, CFStringRef name,
-                                            const void *object,
-                                            CFDictionaryRef userInfo) {
+static void UIApplicationDidFinishLaunching(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
                  dispatch_get_main_queue(), ^{
                    injectLuckySpeederView();
