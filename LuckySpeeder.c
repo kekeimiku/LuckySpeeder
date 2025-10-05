@@ -216,7 +216,11 @@ static int (*original_clock_gettime)(clockid_t clock_id, struct timespec *tp) = 
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
   // TODO: clk_id
   os_unfair_lock_lock(&clock_gettime_lock);
+#if TARGET_OS_TV
+  int ret = original_clock_gettime(clk_id, tp);
+#else
   int ret = port_clock_gettime(clk_id, tp);
+#endif
   if (!ret) {
     if (!clock_gettime_pre_sec) {
       clock_gettime_pre_sec = tp->tv_sec;
