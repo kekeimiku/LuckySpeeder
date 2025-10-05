@@ -25,7 +25,7 @@ for target in "$@"; do
             -O3 \
             -flto \
             -fvisibility=hidden \
-            fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
@@ -47,7 +47,7 @@ for target in "$@"; do
             -O3 \
             -flto \
             -fvisibility=hidden \
-            fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
@@ -68,7 +68,7 @@ for target in "$@"; do
             -O3 \
             -flto \
             -fvisibility=hidden \
-            fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
+            mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
