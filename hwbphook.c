@@ -1,15 +1,11 @@
+// Modified by kekeimiku
 // Modified by Euclid Jan G.
 /* Original owner: Saagar Jha */
 #include "hwbphook.h"
 #include "mach_excServer.h"
-#include <CoreFoundation/CoreFoundation.h>
-#include <dlfcn.h>
-#include <mach-o/dyld_images.h>
-#include <mach-o/nlist.h>
 #include <mach/mach.h>
 #include <pthread.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <stdlib.h>
 #include <sys/sysctl.h>
 
 kern_return_t catch_mach_exception_raise(
