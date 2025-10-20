@@ -143,7 +143,7 @@ void reset_timeScale(void) { set_timeScale(1.0); }
 
 static float gettimeofday_speed = 1.0;
 
-#define USec_Scale (1000000)
+#define USec_Scale (1000000LL)
 static time_t gettimeofday_pre_sec = 0;
 static suseconds_t gettimeofday_pre_usec = 0;
 static time_t gettimeofday_true_pre_sec = 0;
@@ -203,7 +203,7 @@ void reset_gettimeofday(void) { set_gettimeofday(1.0); }
 
 static float clock_gettime_speed = 1.0;
 
-#define NSec_Scale (1000000000)
+#define NSec_Scale (1000000000LL)
 static time_t clock_gettime_pre_sec = 0;
 static long clock_gettime_pre_nsec = 0;
 static time_t clock_gettime_true_pre_sec = 0;

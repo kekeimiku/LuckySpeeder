@@ -6,47 +6,51 @@ static float SKScene_update_speed = 1.0;
 
 static void (*original_SKScene_update)(id, SEL, NSTimeInterval) = NULL;
 
-static void my_SKScene_update(id self, SEL _cmd, NSTimeInterval currentTime) {
+static void my_SKScene_update(id self, SEL cmd, NSTimeInterval currentTime) {
   if ([self isKindOfClass:[SKScene class]]) {
     SKScene *scene = (SKScene *)self;
-    if (scene.physicsWorld) {
-      scene.physicsWorld.speed = SKScene_update_speed;
-      [scene enumerateChildNodesWithName:@"//*"
-                              usingBlock:^(SKNode *node, BOOL *stop) {
-                                if ([node hasActions]) [node setSpeed:SKScene_update_speed];
-                              }];
-    }
+    scene.speed = SKScene_update_speed;
+    if (scene.physicsWorld) scene.physicsWorld.speed = SKScene_update_speed;
   }
+  if (original_SKScene_update) original_SKScene_update(self, cmd, currentTime);
+}
+
+BOOL classNameHasSuffix(Class cls, const char *suffix) {
+  const char *name = class_getName(cls);
+  size_t nlen = strlen(name);
+  size_t slen = strlen(suffix);
+  if (nlen < slen) return NO;
+  return strcmp(name + nlen - slen, suffix) == 0;
 }
 
 int hook_SKScene_update(void) {
   if (original_SKScene_update) return 0;
 
-  Class gameSceneClass = nil;
   int numClasses = objc_getClassList(NULL, 0);
+  if (numClasses < 1) return -1;
 
-  if (numClasses > 0) {
-    Class *classes = (__unsafe_unretained Class *)malloc(sizeof(Class) * numClasses);
-    numClasses = objc_getClassList(classes, numClasses);
-    for (int i = 0; i < numClasses; i++) {
-      Class class = classes[i];
-      if (class_getSuperclass(class) == [SKScene class] && [NSStringFromClass(class) hasSuffix:@"GameScene"])
-        if (class_getInstanceMethod(class, @selector(update:))) {
-          gameSceneClass = class;
-          break;
-        }
-    }
-    free(classes);
-  }
+  unsigned int numClassesUnsigned = (unsigned int)numClasses;
 
-  if (gameSceneClass) {
-    Method updateMethod = class_getInstanceMethod(gameSceneClass, @selector(update:));
+  Class *classes = objc_copyClassList(&numClassesUnsigned);
+  if (!classes) return -1;
+
+  for (unsigned int i = 0; i < numClassesUnsigned; i++) {
+    Class cls = classes[i];
+
+    if (class_getSuperclass(cls) != [SKScene class]) continue;
+
+    if (!classNameHasSuffix(cls, "GameScene")) continue;
+
+    Method updateMethod = class_getInstanceMethod(cls, @selector(update:));
     if (updateMethod) {
       original_SKScene_update = (void (*)(id, SEL, NSTimeInterval))method_getImplementation(updateMethod);
       method_setImplementation(updateMethod, (IMP)my_SKScene_update);
+      free(classes);
       return 0;
     }
   }
+
+  free(classes);
 
   return -1;
 }
