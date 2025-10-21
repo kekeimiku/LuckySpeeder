@@ -123,7 +123,7 @@ int hook_timeScale(void) {
     else
       function_offset = instruction_offset;
 
-    original_timeScale = (void (*)(float))((uintptr_t(*)(void *)) & code_section_start[function_offset])(time_scale_function_address);
+    original_timeScale = (void (*)(float))((uintptr_t (*)(void *))&code_section_start[function_offset])(time_scale_function_address);
   }
 
   if (original_timeScale) {
@@ -214,7 +214,6 @@ static int (*original_clock_gettime)(clockid_t clock_id, struct timespec *tp) = 
 
 // my_clock_gettime fix from AccDemo
 static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
-  // TODO: clk_id
   os_unfair_lock_lock(&clock_gettime_lock);
 #if TARGET_OS_TV
   int ret = original_clock_gettime(clk_id, tp);
