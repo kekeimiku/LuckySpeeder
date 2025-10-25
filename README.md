@@ -47,6 +47,8 @@ PS: If you can use [TrollStore](https://github.com/opa334/TrollStore), [TrollFoo
 
 [Tap Titans 2 - Hero Legends](https://apps.apple.com/us/app/tap-titans-2-hero-legends/id1120294802)
 
+[Soul Knight](https://apps.apple.com/us/app/soul-knight/id1184159988)
+
 And more...
 
 ## Platform Support

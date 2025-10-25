@@ -70,8 +70,12 @@ int hook_timeScale(void) {
   uint8_t *time_scale_function_address = memmem(cstring_section_data, size, "UnityEngine.Time::set_timeScale(System.Single)", 0x2F);
   if (!time_scale_function_address) return -1;
 
-  uintptr_t il2cpp_section_base = (uintptr_t)getsectiondata((const struct mach_header_64 *)unity_vmaddr_slide, "__TEXT", "il2cpp", &size);
-  if (!il2cpp_section_base) return -1;
+  uintptr_t il2cpp_section_base = 0;
+  il2cpp_section_base = (uintptr_t)getsectiondata((const struct mach_header_64 *)unity_vmaddr_slide, "__TEXT", "il2cpp", &size);
+  if (!il2cpp_section_base) {
+    il2cpp_section_base = (uintptr_t)getsectiondata((const struct mach_header_64 *)unity_vmaddr_slide, "__TEXT", "__text", &size);
+    if (!il2cpp_section_base) return -1;
+  };
 
   uint8_t *il2cpp_end = (uint8_t *)(size + il2cpp_section_base);
   if (il2cpp_section_base + 4 >= size + il2cpp_section_base) return -1;
@@ -295,7 +299,6 @@ void reset_clock_gettime(void) {
 
 static float mach_absolute_time_speed = 1.0;
 
-static bool init_mach_absolute_time = false;
 static uint64_t mach_absolute_base_time = 0;
 static uint64_t mach_absolute_start_time = 0;
 static uint64_t mach_absolute_last_time = 0;
@@ -308,23 +311,19 @@ static uint64_t my_mach_absolute_time(void) {
   uint64_t current_time = original_mach_absolute_time();
   uint64_t result;
 
-  if (!init_mach_absolute_time) {
-    init_mach_absolute_time = true;
-    mach_absolute_base_time = current_time;
-    mach_absolute_start_time =
-        (mach_absolute_last_time != 0) ? mach_absolute_last_time : current_time;
-    result = mach_absolute_start_time;
-  } else {
+  if (mach_absolute_last_time) {
     uint64_t delta = current_time - mach_absolute_base_time;
     result = mach_absolute_start_time + (uint64_t)(delta * mach_absolute_time_speed);
-    if (result < mach_absolute_last_time) {
+    if (result <= mach_absolute_last_time) {
       mach_absolute_base_time = current_time;
       mach_absolute_start_time = mach_absolute_last_time + 1;
       result = mach_absolute_start_time;
     }
+  } else {
+    mach_absolute_base_time = current_time;
+    mach_absolute_start_time = current_time;
+    result = current_time;
   }
-
-  if (result <= mach_absolute_last_time) result = mach_absolute_last_time + 1;
 
   mach_absolute_last_time = result;
   os_unfair_lock_unlock(&mach_absolute_base_time_lock);
