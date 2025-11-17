@@ -60,7 +60,7 @@ SOFTWARE.
   }
 
   CGFloat initialW = initialH * 5;
-  CGFloat initialX = size.width - initialH * 5 - 20;
+  CGFloat initialX = size.width - initialW - 20;
   CGFloat initialY = size.height / 5;
 
   self = [super initWithFrame:CGRectMake(initialX, initialY, initialW, initialH)];
@@ -72,14 +72,10 @@ SOFTWARE.
   self.backgroundColor = [UIColor opaqueSeparatorColor];
   self.layer.masksToBounds = YES;
   self.layer.cornerRadius = buttonWidth / 2;
-  self.layer.shadowColor = [UIColor opaqueSeparatorColor].CGColor;
-  self.layer.shadowOpacity = 0.5;
-  self.layer.shadowOffset = CGSizeMake(0, 0);
 
   self.button1 = [UIButton buttonWithType:UIButtonTypeCustom];
   self.button1.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
   [self.button1 setImage:[UIImage systemImageNamed:@(modeSymbols[currentMod]) withConfiguration:self.symbolConfiguration] forState:UIControlStateNormal];
-  self.button1.titleLabel.font = [UIFont systemFontOfSize:fontSize];
   [self.button1 addTarget:self action:@selector(Button1Changed) forControlEvents:UIControlEventTouchUpInside];
   [self addSubview:self.button1];
 
@@ -308,7 +304,6 @@ SOFTWARE.
 
   [UIView animateWithDuration:0.4 animations:animations completion:completion];
 
-  [self resetIdleTimer];
   self.userInteractionEnabled = YES;
 }
 

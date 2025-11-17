@@ -5,7 +5,6 @@
 #include "mach_excServer.h"
 #include <mach/mach.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <sys/sysctl.h>
 
 kern_return_t catch_mach_exception_raise(
@@ -15,7 +14,7 @@ kern_return_t catch_mach_exception_raise(
     exception_type_t exception,
     mach_exception_data_t code,
     mach_msg_type_number_t codeCnt) {
-  abort(); // only calls if not hooked
+  return KERN_FAILURE;
 }
 
 kern_return_t catch_mach_exception_raise_state_identity(
@@ -30,12 +29,8 @@ kern_return_t catch_mach_exception_raise_state_identity(
     mach_msg_type_number_t old_stateCnt,
     thread_state_t new_state,
     mach_msg_type_number_t *new_stateCnt) {
-  abort(); // will call only if not hooked
+  return KERN_FAILURE;
 }
-
-// i guess you can change those
-// two abort calls to KERN_FAILURE (.mm)
-// just in case. not needed though...
 
 mach_port_t server;
 static mach_port_t orig_handler_port = MACH_PORT_NULL; // for debuggers
@@ -128,7 +123,7 @@ bool hwbp_hook(void *old[], void *new[], int count) {
   for (int i = 0; i < count; i++) {
     state.__bvr[i] = (uintptr_t)old[i]; // set
     state.__bcr[i] = 0x1e5;             // enable
-    hooks[active_hooks] = (struct hook){(uintptr_t)old[i], (uintptr_t) new[i]};
+    hooks[active_hooks] = (struct hook){(uintptr_t)old[i], (uintptr_t)new[i]};
     active_hooks++;
   }
 
