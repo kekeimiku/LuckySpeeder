@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 if [[ $# -eq 0 ]]; then
     echo "Usage: $0 [arm64-apple-ios|arm64-apple-ios-macabi|arm64-apple-xros|arm64-apple-tvos]"

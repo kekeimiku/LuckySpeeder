@@ -27,7 +27,6 @@ SOFTWARE.
 
 #include "LuckySpeeder.h"
 #include "fishhook.h"
-#include <dlfcn.h>
 #include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
 #include <os/lock.h>
@@ -37,6 +36,7 @@ SOFTWARE.
 #if !TARGET_OS_TV
 #include "hwbphook.h"
 #include "port_clock_gettime.h"
+#include <dlfcn.h>
 #endif
 
 static float timeScale_speed = 1.0;
@@ -44,7 +44,7 @@ static float timeScale_speed = 1.0;
 static void (*original_timeScale)(float) = NULL;
 
 static void my_timeScale(void) {
-  if (original_timeScale) original_timeScale(timeScale_speed);
+  original_timeScale(timeScale_speed);
 }
 
 int hook_timeScale(void) {

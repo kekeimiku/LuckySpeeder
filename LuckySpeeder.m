@@ -34,10 +34,12 @@ int hook_SKScene_update(void) {
   Class *classes = objc_copyClassList(&numClassesUnsigned);
   if (!classes) return -1;
 
+  Class SKSceneClass = [SKScene class];
+
   for (unsigned int i = 0; i < numClassesUnsigned; i++) {
     Class cls = classes[i];
 
-    if (class_getSuperclass(cls) != [SKScene class]) continue;
+    if (class_getSuperclass(cls) != SKSceneClass) continue;
 
     if (!classNameHasSuffix(cls, "GameScene")) continue;
 
