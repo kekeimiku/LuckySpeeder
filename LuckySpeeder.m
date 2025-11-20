@@ -15,11 +15,11 @@ static void my_SKScene_update(id self, SEL cmd, NSTimeInterval currentTime) {
   if (original_SKScene_update) original_SKScene_update(self, cmd, currentTime);
 }
 
-BOOL classNameHasSuffix(Class cls, const char *suffix) {
+bool classNameHasSuffix(Class cls, const char *suffix) {
   const char *name = class_getName(cls);
   size_t nlen = strlen(name);
   size_t slen = strlen(suffix);
-  if (nlen < slen) return NO;
+  if (nlen < slen) return false;
   return strcmp(name + nlen - slen, suffix) == 0;
 }
 
