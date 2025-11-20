@@ -6,16 +6,22 @@
 #include <sys/sysctl.h>
 #include <unistd.h>
 
-#include "shellcode.h"
+extern const char *const APP_SANDBOX_READ;
+extern char *sandbox_extension_issue_file(const char *extension_class, const char *path, uint32_t flags);
+
+extern char m_start[];
+extern char m_end[];
+extern char m_pthread_create_addr[];
+extern char m_sandbox_consume_addr[];
+extern char m_dlopen_addr[];
+extern char m_payload_path[];
+extern char m_sandbox_token[];
 
 #include <ptrauth.h>
 kern_return_t (*_thread_convert_thread_state)(
     thread_act_t thread, int direction, thread_state_flavor_t flavor,
     thread_state_t in_state, mach_msg_type_number_t in_stateCnt,
     thread_state_t out_state, mach_msg_type_number_t *out_stateCnt);
-
-extern const char *const APP_SANDBOX_READ;
-extern char *sandbox_extension_issue_file(const char *extension_class, const char *path, uint32_t flags);
 
 char *resolvePath(char *pathToResolve) {
   if (strlen(pathToResolve) == 0)
@@ -38,6 +44,9 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  pid_t pid = atoi(argv[1]);
+  char *payload_path = resolvePath(argv[2]);
+
   int result = 0;
   mach_port_t task = 0;
   thread_act_t thread = 0;
@@ -45,8 +54,6 @@ int main(int argc, char **argv) {
   mach_vm_address_t stack = 0;
   vm_size_t stack_size = 16 * 1024;
   uint64_t stack_contents = 0x00000000CAFEBABE;
-  pid_t pid = atoi(argv[1]);
-  char *payload_path = resolvePath(argv[2]);
 
   char *sandbox_token = sandbox_extension_issue_file(APP_SANDBOX_READ, payload_path, 0);
   if (!sandbox_token) {
@@ -75,7 +82,15 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (mach_vm_allocate(task, &code, sizeof(shell_code), VM_FLAGS_ANYWHERE) != KERN_SUCCESS) {
+  unsigned char *SHELLCODE = (unsigned char *)m_start;
+  const uintptr_t SHELLCODE_SIZE = m_end - m_start;
+  const uintptr_t PTHREAD_CREATE = m_pthread_create_addr - m_start;
+  const uintptr_t SANDBOX_CONSUME = m_sandbox_consume_addr - m_start;
+  const uintptr_t DLOPEN = m_dlopen_addr - m_start;
+  const uintptr_t PAYLOAD_PATH = m_payload_path - m_start;
+  const uintptr_t SANDBOX_TOKEN = m_sandbox_token - m_start;
+
+  if (mach_vm_allocate(task, &code, SHELLCODE_SIZE, VM_FLAGS_ANYWHERE) != KERN_SUCCESS) {
     fprintf(stderr, "could not allocate code segment\n");
     return 1;
   }
@@ -84,18 +99,18 @@ int main(int argc, char **argv) {
   uint64_t dlopen_address = (uint64_t)ptrauth_strip(dlsym(RTLD_DEFAULT, "dlopen"), ptrauth_key_function_pointer);
   uint64_t sandbox_consume_address = (uint64_t)ptrauth_strip(dlsym(RTLD_DEFAULT, "sandbox_extension_consume"), ptrauth_key_function_pointer);
 
-  memcpy(shell_code + PTHREAD_CREATE, &pcfmt_address, sizeof(uint64_t));
-  memcpy(shell_code + SANDBOX_CONSUME, &sandbox_consume_address, sizeof(uint64_t));
-  memcpy(shell_code + DLOPEN, &dlopen_address, sizeof(uint64_t));
-  memcpy(shell_code + PAYLOAD_PATH, payload_path, strlen(payload_path));
-  memcpy(shell_code + SANDBOX_TOKEN, sandbox_token, strlen(sandbox_token));
+  memcpy(SHELLCODE + PTHREAD_CREATE, &pcfmt_address, sizeof(uint64_t));
+  memcpy(SHELLCODE + SANDBOX_CONSUME, &sandbox_consume_address, sizeof(uint64_t));
+  memcpy(SHELLCODE + DLOPEN, &dlopen_address, sizeof(uint64_t));
+  memcpy(SHELLCODE + PAYLOAD_PATH, payload_path, strlen(payload_path));
+  memcpy(SHELLCODE + SANDBOX_TOKEN, sandbox_token, strlen(sandbox_token));
 
-  if (mach_vm_write(task, code, (vm_address_t)shell_code, sizeof(shell_code)) != KERN_SUCCESS) {
+  if (mach_vm_write(task, code, (vm_address_t)SHELLCODE, SHELLCODE_SIZE) != KERN_SUCCESS) {
     fprintf(stderr, "could not copy shellcode into code segment\n");
     return 1;
   }
 
-  if (vm_protect(task, code, sizeof(shell_code), 0, VM_PROT_EXECUTE | VM_PROT_READ) != KERN_SUCCESS) {
+  if (vm_protect(task, code, SHELLCODE_SIZE, 0, VM_PROT_EXECUTE | VM_PROT_READ) != KERN_SUCCESS) {
     fprintf(stderr, "could not change protection for code segment\n");
     return 1;
   }
