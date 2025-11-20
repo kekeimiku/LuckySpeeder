@@ -84,10 +84,9 @@ static void injectLuckySpeederView(void) {
 }
 
 static void UIApplicationDidFinishLaunching(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC),
-                 dispatch_get_main_queue(), ^{
-                   injectLuckySpeederView();
-                 });
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+    injectLuckySpeederView();
+  });
 }
 
 __attribute__((constructor)) static void initialize(void) {
