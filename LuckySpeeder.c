@@ -347,3 +347,66 @@ void set_mach_absolute_time(float value) {
 }
 
 void reset_mach_absolute_time(void) { set_mach_absolute_time(1.0); }
+
+static float Godot_Engine_speed = 1.0;
+static int original_physics_ticks = 60;
+static int original_max_fps = 0;
+static os_unfair_lock Godot_Engine_lock = OS_UNFAIR_LOCK_INIT;
+
+static void (*Engine_set_time_scale)(void *, double) = NULL;
+static void (*Engine_set_physics_ticks_per_second)(void *, int) = NULL;
+static int (*Engine_get_physics_ticks_per_second)(void *) = NULL;
+static void (*Engine_set_max_fps)(void *, int) = NULL;
+static int (*Engine_get_max_fps)(void *) = NULL;
+static void *(*Engine_get_singleton)(void) = NULL;
+
+int hook_Godot_Engine(void) {
+  if (Engine_set_time_scale) return 0;
+
+  Engine_set_time_scale = dlsym(RTLD_DEFAULT, "_ZN6Engine14set_time_scaleEd");
+  Engine_set_physics_ticks_per_second = dlsym(RTLD_DEFAULT, "_ZN6Engine28set_physics_ticks_per_secondEi");
+  Engine_get_physics_ticks_per_second = dlsym(RTLD_DEFAULT, "_ZNK6Engine28get_physics_ticks_per_secondEv");
+  Engine_set_max_fps = dlsym(RTLD_DEFAULT, "_ZN6Engine11set_max_fpsEi");
+  Engine_get_max_fps = dlsym(RTLD_DEFAULT, "_ZNK6Engine11get_max_fpsEv");
+  Engine_get_singleton = dlsym(RTLD_DEFAULT, "_ZN6Engine13get_singletonEv");
+
+  if (!Engine_set_time_scale || !Engine_set_physics_ticks_per_second ||
+      !Engine_get_physics_ticks_per_second || !Engine_set_max_fps ||
+      !Engine_get_max_fps || !Engine_get_singleton) {
+    return -1;
+  }
+
+  void *engine = Engine_get_singleton();
+  if (engine) {
+    original_physics_ticks = Engine_get_physics_ticks_per_second(engine);
+    original_max_fps = Engine_get_max_fps(engine);
+  }
+
+  return 0;
+}
+
+void set_Godot_Engine(float value) {
+  os_unfair_lock_lock(&Godot_Engine_lock);
+  Godot_Engine_speed = value;
+
+  if (Engine_set_time_scale && Engine_get_singleton) {
+    void *engine = Engine_get_singleton();
+    if (engine) {
+      Engine_set_time_scale(engine, (double)Godot_Engine_speed);
+
+      Engine_set_physics_ticks_per_second(engine, (int)(original_physics_ticks * Godot_Engine_speed));
+
+      if (original_max_fps > 0) {
+        Engine_set_max_fps(engine, (int)(original_max_fps * Godot_Engine_speed));
+      } else {
+        Engine_set_max_fps(engine, (int)(60 * Godot_Engine_speed));
+      }
+    }
+  }
+
+  os_unfair_lock_unlock(&Godot_Engine_lock);
+}
+
+void reset_Godot_Engine(void) {
+  set_Godot_Engine(1.0);
+}

@@ -60,4 +60,10 @@ void set_SKScene_update(float value);
 
 void reset_SKScene_update(void);
 
+int hook_Godot_Engine(void);
+
+void set_Godot_Engine(float value);
+
+void reset_Godot_Engine(void);
+
 #endif // LuckySpeeder_H
