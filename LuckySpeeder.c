@@ -195,7 +195,7 @@ static int my_gettimeofday(struct timeval *tv, struct timezone *tz) {
 int hook_gettimeofday(void) {
   if (original_gettimeofday) return 0;
 
-  struct rebinding rebindings = {"gettimeofday", my_gettimeofday, (void *)&original_gettimeofday};
+  struct rebinding rebindings = { "gettimeofday", my_gettimeofday, (void *)&original_gettimeofday };
   return rebind_symbols(&rebindings, 1);
 }
 
@@ -260,7 +260,7 @@ static int my_clock_gettime(clockid_t clk_id, struct timespec *tp) {
 int hook_clock_gettime(void) {
   if (original_clock_gettime) return 0;
 
-  struct rebinding rebindings = {"clock_gettime", my_clock_gettime, (void *)&original_clock_gettime};
+  struct rebinding rebindings = { "clock_gettime", my_clock_gettime, (void *)&original_clock_gettime };
   return rebind_symbols(&rebindings, 1);
 }
 #else
@@ -270,8 +270,8 @@ int hook_clock_gettime(void) {
   original_clock_gettime = dlsym(RTLD_DEFAULT, "clock_gettime");
   if (!original_clock_gettime) return -1;
 
-  void *original[] = {(void *)original_clock_gettime};
-  void *hooked[] = {(void *)my_clock_gettime};
+  void *original[] = { (void *)original_clock_gettime };
+  void *hooked[] = { (void *)my_clock_gettime };
   bool success = hwbp_hook(original, hooked, 1);
 
   if (!success) return -1;
@@ -292,7 +292,7 @@ void reset_clock_gettime(void) { set_clock_gettime(1.0); }
 void reset_clock_gettime(void) {
   if (!original_clock_gettime) return;
 
-  void *original[] = {(void *)original_clock_gettime};
+  void *original[] = { (void *)original_clock_gettime };
   hwbp_unhook(original, 1);
   set_clock_gettime(1.0);
   original_clock_gettime = NULL;
@@ -335,7 +335,7 @@ static uint64_t my_mach_absolute_time(void) {
 int hook_mach_absolute_time(void) {
   if (original_mach_absolute_time) return 0;
 
-  struct rebinding rebindings = {"mach_absolute_time", my_mach_absolute_time, (void *)&original_mach_absolute_time};
+  struct rebinding rebindings = { "mach_absolute_time", my_mach_absolute_time, (void *)&original_mach_absolute_time };
   return rebind_symbols(&rebindings, 1);
 }
 
@@ -367,7 +367,7 @@ static unsigned int my_sleep(unsigned int seconds) {
 int hook_sleep(void) {
   if (original_sleep) return 0;
 
-  struct rebinding rebindings = {"sleep", my_sleep, (void *)&original_sleep};
+  struct rebinding rebindings = { "sleep", my_sleep, (void *)&original_sleep };
   return rebind_symbols(&rebindings, 1);
 }
 
@@ -396,7 +396,7 @@ static int my_usleep(useconds_t usec) {
 int hook_usleep(void) {
   if (original_usleep) return 0;
 
-  struct rebinding rebindings = {"usleep", my_usleep, (void *)&original_usleep};
+  struct rebinding rebindings = { "usleep", my_usleep, (void *)&original_usleep };
   return rebind_symbols(&rebindings, 1);
 }
 
@@ -440,7 +440,7 @@ static int my_nanosleep(const struct timespec *req, struct timespec *rem) {
 int hook_nanosleep(void) {
   if (original_nanosleep) return 0;
 
-  struct rebinding rebindings = {"nanosleep", my_nanosleep, (void *)&original_nanosleep};
+  struct rebinding rebindings = { "nanosleep", my_nanosleep, (void *)&original_nanosleep };
   return rebind_symbols(&rebindings, 1);
 }
 

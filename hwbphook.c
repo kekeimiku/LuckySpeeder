@@ -123,7 +123,7 @@ bool hwbp_hook(void *old[], void *new[], int count) {
   for (int i = 0; i < count; i++) {
     state.__bvr[i] = (uintptr_t)old[i]; // set
     state.__bcr[i] = 0x1e5;             // enable
-    hooks[active_hooks] = (struct hook){(uintptr_t)old[i], (uintptr_t)new[i]};
+    hooks[active_hooks] = (struct hook){ (uintptr_t)old[i], (uintptr_t)new[i] };
     active_hooks++;
   }
 

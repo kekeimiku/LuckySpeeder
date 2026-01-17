@@ -19,9 +19,9 @@
 #define NULL_SCALE (1ULL << HIGH_SHIFT)
 
 /* The cached mach_time scale factors */
-static mach_timebase_info_data_t mach_scale = {0};
+static mach_timebase_info_data_t mach_scale = { 0 };
 static uint64_t mach_mult = 0;
-static struct timespec res_mach = {0, 0};
+static struct timespec res_mach = { 0, 0 };
 
 /* Obtain the mach_time scale factor if needed, or return an error */
 static int get_mach_scale(void) {

@@ -5,3 +5,4 @@ AllowShortLoopsOnASingleLine: true
 AllowShortBlocksOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
 AllowAllParametersOfDeclarationOnNextLine: false
+Cpp11BracedListStyle: false

@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
     if (thread_state.__x[0] == 0x444f4e45) {
       result = 0;
 
-      uintptr_t error_buffer[2] = {0};
+      uintptr_t error_buffer[2] = { 0 };
       size_t maxSize = sizeof(error_buffer);
       kr = vm_read_overwrite(task, error_buffer_address, sizeof(error_buffer), (vm_address_t)error_buffer, &maxSize);
       if (kr != KERN_SUCCESS) {
