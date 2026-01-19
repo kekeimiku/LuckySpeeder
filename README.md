@@ -79,14 +79,13 @@ clang -shared \
     -O3 \
     -flto \
     -fvisibility=hidden \
+    -Wl,-x \
     -fuse-ld=lld \
     mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
     -framework Foundation \
     -framework UIKit \
     -framework SpriteKit \
     -o LuckySpeeder.dylib
-
-llvm-strip -x LuckySpeeder.dylib
 ```
 
 ## Disclaimer

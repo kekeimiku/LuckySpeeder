@@ -18,19 +18,19 @@ for target in "$@"; do
         out_dir=$OUTPUT_DIR/$target
         mkdir -p $out_dir
 
-        $clang -dynamiclib \
+        $clang -shared \
             -target arm64-apple-ios13.1 \
             -isysroot $sdk_dir \
             -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
+            -Wl,-x \
             mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib
-        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-ios-macabi)
         echo "Building for $target..."
@@ -39,7 +39,7 @@ for target in "$@"; do
         out_dir=$OUTPUT_DIR/$target
         mkdir -p $out_dir
 
-        $clang -dynamiclib \
+        $clang -shared \
             -target arm64-apple-ios13.1-macabi \
             -isysroot $sdk_dir \
             -iframework $sdk_dir/System/iOSSupport/System/Library/Frameworks \
@@ -47,12 +47,12 @@ for target in "$@"; do
             -O3 \
             -flto \
             -fvisibility=hidden \
+            -Wl,-x \
             mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib
-        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-xros)
         echo "Building for $target..."
@@ -61,19 +61,19 @@ for target in "$@"; do
         out_dir=$OUTPUT_DIR/$target
         mkdir -p $out_dir
 
-        $clang -dynamiclib \
+        $clang -shared \
             -target arm64-apple-xros1.0 \
             -isysroot $sdk_dir \
             -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
+            -Wl,-x \
             mach_excServer.c hwbphook.c port_clock_gettime.c fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib
-        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     arm64-apple-tvos)
         echo "Building for $target..."
@@ -82,19 +82,19 @@ for target in "$@"; do
         out_dir=$OUTPUT_DIR/$target
         mkdir -p $out_dir
 
-        $clang -dynamiclib \
+        $clang -shared \
             -target arm64-apple-tvos13.2 \
             -isysroot $sdk_dir \
             -fobjc-arc \
             -O3 \
             -flto \
             -fvisibility=hidden \
+            -Wl,-x \
             fishhook.c LuckySpeeder.c LuckySpeeder.m LuckySpeederView.m Main.m \
             -framework Foundation \
             -framework UIKit \
             -framework SpriteKit \
             -o $out_dir/LuckySpeeder.dylib
-        strip -x $out_dir/LuckySpeeder.dylib
         ;;
     *)
         echo "Invalid target: $target"
